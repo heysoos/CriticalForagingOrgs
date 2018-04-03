@@ -1,0 +1,107 @@
+#!/usr/bin/env python
+
+from embodied_ising import ising
+import numpy as np
+from sys import argv
+from os import path, makedirs
+
+import pickle
+
+loadfile = 'learn_only'
+gen = 0
+
+def random_senses():
+    # r_food = np.random.uniform(-180, 180)
+    # org_sens = np.random.uniform(0, 1)
+    # I.s[0] = r_food / 180
+    # I.s[2] = np.tanh(org_sens) * 2 - 1
+
+    I.s[1] = np.random.uniform(-1, 1)
+    I.s[2] = np.random.uniform(-1, 1)
+
+
+# --- COMPUTE MOTOR RESPONSE -------------------------------------------------------+
+
+if len(argv) < 2:
+    print("Usage: " + argv[0] + "<sensInd>")
+    exit(1)
+
+sensInd = int(argv[1])
+
+# sensInd = 0
+
+
+R = 1
+Nsens = 100
+mode = 'MonteCarlo'
+sens = np.linspace(-1, 1, Nsens)
+
+filename = 'save/' + loadfile + '/isings/gen[' + str(gen) + ']-isings.pickle'
+
+startstr = 'Loading simulation:' + loadfile
+print(startstr)
+
+isings = pickle.load(open(filename, 'rb'))
+numAgents = len(isings)
+
+#  motor-dv, motor-dr, susc-motor-dv, susc-motor-dr
+MV = np.zeros((R, numAgents))
+MR = np.zeros((R, numAgents))
+CMV = np.zeros((R, numAgents))
+CMR = np.zeros((R, numAgents))
+
+d = np.dtype([('MV', 'f8'), ('MR', 'f8'), ('CMV', 'f8'), ('CMR', 'f8')])
+data = np.zeros((R, numAgents), dtype=d)
+
+for rep in range(R):
+    for agentNum, I in enumerate(isings):
+        # print(agentNum)
+        Mv = 0
+        Mr = 0
+        M2v = 0
+        M2r = 0
+        T = 1000
+
+        I.randomize_state()
+        random_senses()
+        I.s[0] = sens[sensInd]  # the sensor to hold constant
+
+        for t in range(int(T / 10)):
+            random_senses()
+            I.NoSensorGlauberStep()  # sensor values dont update
+
+        for t in range(T):
+            random_senses()
+            I.NoSensorGlauberStep()
+            # -1, 0, 1 for brake, nothing, accelerate
+            dv = (np.sum(I.s[-I.Msize1:]) / 2)
+            dr = (np.sum(I.s[-I.Msize:-I.Msize1]) / 2)
+
+            Mv += dv / float(T)  # dv
+            Mr += dr / float(T)  # dr
+
+            # print(I.s[:3])
+
+            M2v += dv ** 2 / float(T)
+            M2r += dr ** 2 / float(T)
+
+        data['MV'][rep, agentNum] = Mv
+        data['MR'][rep, agentNum] = Mr
+        data['CMV'][rep, agentNum] = (M2v - Mv ** 2)
+        data['CMR'][rep, agentNum] = (M2r - Mr**2)
+
+folder = 'save/' + loadfile + '/Motor_Response/gen_' + str(gen) + '/'
+file = 'MR-' + 'Nsens_' + str(Nsens) + \
+       '-sensInd_' + str(sensInd) + \
+       '-gen_' + str(gen) + \
+       '.npy'
+
+filename = folder + file
+
+if not path.exists(folder):
+    makedirs(folder)
+
+
+np.save(filename, data)
+savestr = 'Saving: ./.../' + file
+print(savestr)

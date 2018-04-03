@@ -1,0 +1,70 @@
+#!/usr/bin/env python
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib
+
+loadfile = 'evolve_only_1'
+folder = 'save/' + loadfile
+iter_gen = '1002'
+
+plt.rc('text', usetex=True)
+font = {'family': 'serif', 'size': 28, 'serif': ['computer modern roman']}
+plt.rc('font', **font)
+plt.rc('legend', **{'fontsize': 20})
+
+R = 10
+mode = 'MonteCarlo'
+
+Nbetas = 101
+betas = 10 ** np.linspace(-1, 1, Nbetas)
+numAgents = 50
+C = np.zeros((R, numAgents, Nbetas))
+
+size = 27
+for bind in np.arange(1, 100):
+    filename = folder + '/C/C_' + iter_gen + '/C-size_' + str(size) + '-Nbetas_' + \
+               str(Nbetas) + '-bind_' + str(bind) + '.npy'
+    C[:, :, bind] = np.load(filename)
+
+# size = 50
+# bind = 1
+# filename = folder + 'C/C-size_' + str(size) + '-Nbetas_' + \
+#            str(Nbetas) + '-bind_' + str(bind) + '.npy'
+# C[:, :, 0] = np.load(filename)
+
+
+b = 0.8
+
+meanC = np.mean(np.mean(C, axis=0), axis=0)
+
+fig, ax = plt.subplots(1, 2, figsize=(5, 3), sharex=True)
+fig.text(0.51, 0.035, r'$\beta$', ha='center', fontsize=28)
+fig.text(0.07, 0.5, r'$C/N$', va='center', rotation='vertical', fontsize=28)
+
+ax[0].plot(betas, meanC,
+         color='k')
+title = 'Specific Heat of Foraging Community\n Generation: ' + iter_gen
+fig.suptitle(title)
+ax[0].fill_between(betas, np.mean(np.min(
+    C, axis=0),axis=0), np.mean(np.max(C, axis=0),axis=0), color=[b, b, b])
+ax[0].set_ylim(0, 1.5*np.max(meanC[:-30]))
+
+
+
+for i in range(0,50):
+    c = np.dot(np.random.random(), [1, 1, 1])
+    ax[1].scatter(betas, np.mean(C[:, i, :], axis=0), color=[0, 0, 0], s=30, alpha=0.1)
+
+xticks = [0.1, 0.5, 1, 2, 4, 10]
+for AX in ax:
+    AX.set_xscale("log", nonposx='clip')
+    AX.set_xticks(xticks)
+    AX.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+
+plt.axis([0.1, 10, 0, 1.5*np.max(meanC[:-30])])
+
+
+# plt.axis([0.1, 0.5, 10 ** 0.8, 0, np.max(C[-1, :, :]) * 1.05])
+# plt.savefig('img/fig1b.pdf', bbox_inches='tight')
+plt.show()
