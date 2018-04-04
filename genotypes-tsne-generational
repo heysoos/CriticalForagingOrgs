@@ -1,0 +1,96 @@
+#!/usr/bin/env python
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import offsetbox
+from scipy.special import comb
+import pickle
+from sklearn import manifold
+
+
+loadfile = 'learn_evolve'
+# iter_list = [0, 25, 50, 75, 200, 500, 1000]
+iter_list = np.arange(0, 1100, 100)
+# iter_list = np.arange(0, 1002, 6 * 20)
+numAgents = 50
+numNeurons = 27
+# ---- t-SNE settings ------
+perplexity = 30
+n_iter = 1000
+# ---- plot settings ------
+markers = ['o', '+', '.', 'D', 's', '^', 'v', '*', 'h', 0, 1, 2, 3, 4]
+# alpha = np.linspace(0.3, 1, len(iter_list))
+# alpha = np.logspace(np.log(0.3), np.log(1), len(iter_list))
+alpha = 0.7
+markersize = np.logspace(np.log(1), np.log(10), len(iter_list))
+
+def upper_tri_masking(A):
+    m = A.shape[0]
+    r = np.arange(m)
+    mask = r[:, None] < r
+    return A[mask]
+
+plt.rc('text', usetex=True)
+font = {'family': 'serif', 'size': 16, 'serif': ['computer modern roman']}
+plt.rc('font', **font)
+plt.rc('legend', **{'fontsize': 16})
+
+folder = 'save/' + loadfile
+
+# [ organism(gen),  edges]
+J = np.zeros((numAgents * len(iter_list), int(comb(numNeurons, 2))) )
+iter_label = []
+
+orgNum = 0
+for iter in iter_list:
+    filename = 'save/' + loadfile + '/isings/gen[' + str(iter) + ']-isings.pickle'
+
+    startstr = 'Loading simulation:' + filename
+    print(startstr)
+
+    isings = pickle.load(open(filename, 'rb'))
+    iter_label.append('Gen: ' + str(iter))
+
+    for I in isings:
+        J[orgNum, :] = upper_tri_masking(I.J)
+        orgNum += 1
+
+
+#  ----------------------------------------------------------------------
+print("Computing t-SNE embedding")
+tsne = manifold.TSNE(n_components=2, init='pca', random_state=0, perplexity=perplexity, n_iter=n_iter)
+J_tsne = tsne.fit_transform(J)
+
+plt.figure(1)
+plt.subplot(111)
+
+b = 0
+c = [b, b, b]
+for ii, iter in enumerate(iter_list):
+
+    i = ii * numAgents
+    j = i + numAgents
+
+    x1 = J_tsne[i:j, 0]
+    y1 = J_tsne[i:j, 1]
+
+    plt.scatter(x1, y1, label=str(iter),
+                color=np.tile(c, (len(x1), 1)), alpha=alpha,
+                s=markersize[ii])
+
+
+titlestr = 'Connectivity t-SNE Projections'
+plt.title(titlestr)
+# xlblstr = 'Perplexity: ' + str(perplexity)
+# plt.xlabel(xlblstr)
+
+plt.legend(loc=2, title='Generation')
+plt.tight_layout()
+
+
+ax = plt.gca()
+ax.set_aspect(1./ax.get_data_ratio())
+ax.set_xticklabels([])
+ax.set_yticklabels([])
+
+plt.show()
