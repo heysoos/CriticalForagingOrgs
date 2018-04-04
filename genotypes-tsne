@@ -7,9 +7,11 @@ import pickle
 from sklearn import manifold
 
 
-loadfile = 'evolve_only_1'
-iter = '1002'
-perplexity = 50
+loadfile = 'learn_evolve'
+iter_1 = 975
+iter_2 = 1000
+# ---- t-SNE settings ------
+perplexity = 10
 n_iter = 1000
 
 def upper_tri_masking(A):
@@ -18,30 +20,63 @@ def upper_tri_masking(A):
     mask = r[:,None] < r
     return A[mask]
 
+plt.rc('text', usetex=True)
+font = {'family': 'serif', 'size': 16, 'serif': ['computer modern roman']}
+plt.rc('font', **font)
+plt.rc('legend', **{'fontsize': 16})
+
 folder = 'save/' + loadfile
 
-filename = 'save/' + loadfile + '/isings/gen[' + iter + ']-isings.pickle'
+J = np.zeros((100, 351)) # 100 organisms (50 iter_1, 50 iter_2) x 351 edges
+#  -------------------------------- iter_1 ------------------------------
+filename = 'save/' + loadfile + '/isings/gen[' + str(iter_1) + ']-isings.pickle'
 
 startstr = 'Loading simulation:' + filename
 print(startstr)
 
 isings = pickle.load(open(filename, 'rb'))
 
-J = np.zeros((50,351))
-for orgNum, I in enumerate(isings):
+orgNum = 0
+for I in isings:
     J[orgNum, :] = upper_tri_masking(I.J)
-    # if orgNum == 0:
-    #     J = upper_tri_masking(I.J)
-    # else:
-    #     np.concatenate((J, upper_tri_masking(I.J)))
+    orgNum += 1
 
-#----------------------------------------------------------------------
-# t-SNE embedding of the digits dataset
+iter_1_label = 'Gen: ' + str(iter_1)
+#  ------------------------------- iter_2 --------------------------------
+filename = 'save/' + loadfile + '/isings/gen[' + str(iter_2) + ']-isings.pickle'
+
+startstr = 'Loading simulation:' + filename
+print(startstr)
+
+isings = pickle.load(open(filename, 'rb'))
+
+for I in isings:
+    J[orgNum, :] = upper_tri_masking(I.J)
+    orgNum += 1
+
+iter_2_label = 'Gen: ' + str(iter_2)
+#  ----------------------------------------------------------------------
 print("Computing t-SNE embedding")
 tsne = manifold.TSNE(n_components=2, init='pca', random_state=0, perplexity=perplexity, n_iter=n_iter)
-J_tsne = tsne.fit_transform(np.transpose(J))
-b = 0.5
-plt.scatter(J_tsne[:,0], J_tsne[:,1])
+J_tsne = tsne.fit_transform(J)
+
+x1 = J_tsne[:50, 0]
+y1 = J_tsne[:50, 1]
+x2 = J_tsne[50:100, 0]
+y2 = J_tsne[50:100, 1]
+
+plt.figure(1)
+plt.subplot(111)
+
+plt.scatter(x1, y1, label=iter_1_label)
+plt.scatter(x2, y2, marker='+', label=iter_2_label)
+plt.legend(loc=2)
+
+titlestr = 'Connectivity t-SNE Projection\n Generation: ' + str(iter_1) + ', ' + str(iter_2)
+plt.title(titlestr)
+
+
+ax = plt.gca()
+ax.set_xticklabels([])
 
 plt.show()
-print()

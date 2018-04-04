@@ -162,6 +162,9 @@ class ising:
         if self.v > settings['v_max']:
             self.v = settings['v_max']
 
+        if self.r > settings['r_max']:
+            self.r = settings['r_max']
+
         # print('Velocity: ' + str(self.v) +  str(self.s[-1]))
 
         # UPDATE POSITION

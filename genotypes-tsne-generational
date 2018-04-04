@@ -10,19 +10,21 @@ from sklearn import manifold
 
 loadfile = 'learn_evolve'
 # iter_list = [0, 25, 50, 75, 200, 500, 1000]
-iter_list = np.arange(0, 1100, 100)
-# iter_list = np.arange(0, 1002, 6 * 20)
+iter_list = np.arange(25, 1025, 25)
+# iter_list = np.arange(0, 1002, 6*5)
 numAgents = 50
 numNeurons = 27
 # ---- t-SNE settings ------
 perplexity = 30
 n_iter = 1000
 # ---- plot settings ------
-markers = ['o', '+', '.', 'D', 's', '^', 'v', '*', 'h', 0, 1, 2, 3, 4]
+# markers = ['o', '+', '.', 'D', 's', '^', 'v', '*', 'h', 0, 1, 2, 3, 4]
 # alpha = np.linspace(0.3, 1, len(iter_list))
 # alpha = np.logspace(np.log(0.3), np.log(1), len(iter_list))
 alpha = 0.7
 markersize = np.logspace(np.log(1), np.log(10), len(iter_list))
+selected = np.logspace(np.log10(1), np.log10(len(iter_list)), 4) - 1
+selected = [int(i) for i in selected]
 
 def upper_tri_masking(A):
     m = A.shape[0]
@@ -31,9 +33,9 @@ def upper_tri_masking(A):
     return A[mask]
 
 plt.rc('text', usetex=True)
-font = {'family': 'serif', 'size': 16, 'serif': ['computer modern roman']}
+font = {'family': 'serif', 'size': 28, 'serif': ['computer modern roman']}
 plt.rc('font', **font)
-plt.rc('legend', **{'fontsize': 16})
+plt.rc('legend', **{'fontsize': 20})
 
 folder = 'save/' + loadfile
 
@@ -67,6 +69,10 @@ plt.subplot(111)
 b = 0
 c = [b, b, b]
 for ii, iter in enumerate(iter_list):
+    if ii in selected:
+        label = str(iter)
+    else:
+        label = None
 
     i = ii * numAgents
     j = i + numAgents
@@ -74,7 +80,7 @@ for ii, iter in enumerate(iter_list):
     x1 = J_tsne[i:j, 0]
     y1 = J_tsne[i:j, 1]
 
-    plt.scatter(x1, y1, label=str(iter),
+    plt.scatter(x1, y1, label=label,
                 color=np.tile(c, (len(x1), 1)), alpha=alpha,
                 s=markersize[ii])
 

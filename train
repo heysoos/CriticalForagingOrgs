@@ -25,6 +25,7 @@ settings['evolution_toggle'] = False
 settings['evolution_rate'] = 1  # number of iterations to skip to kill/mate (gives more time to eat before evolution)
 
 settings['dt'] = 0.04  # simulation time step      (dt)
+settings['r_max'] = 720
 settings['dr_max'] = 90  # max rotational speed      (degrees per second)
 settings['v_max'] = 0.5  # max velocity              (units per second)
 settings['dv_max'] = 0.05  # max acceleration (+/-)    (units per second^2)

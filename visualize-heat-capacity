@@ -4,9 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 
-loadfile = 'evolve_only_1'
+loadfile = 'learn_evolve'
 folder = 'save/' + loadfile
-iter_gen = '1002'
+iter_gen = '25'
 
 plt.rc('text', usetex=True)
 font = {'family': 'serif', 'size': 28, 'serif': ['computer modern roman']}
