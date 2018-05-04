@@ -220,15 +220,28 @@ class ising:
         for i in np.random.permutation(self.size):
             self.Update(settings, i)
 
+
     # Update all states of the system without restricted infuences
-    def SequentialGlauberStep(self):
-        perms = np.random.permutation(range(1, self.size))
-        np.append(perms, 0)  # move after updating all hidden neurons
-        for i in perms:
-            self.GlauberStep(i)
+    def SequentialGlauberStep(self, settings):
+        thermalTime = int(settings['thermalTime'])
+
+        self.UpdateSensors(settings) # update sensors at beginning
+
+        # update all other neurons a bunch of times
+        for j in range(thermalTime):
+            perms = np.random.permutation(range(self.Ssize, self.size))
+            for i in perms:
+                self.GlauberStep(i)
+
+        self.Move(settings) # move organism at end
 
     def NoSensorGlauberStep(self):
         perms = np.random.permutation(range(self.Ssize, self.size))
+        for i in perms:
+            self.GlauberStep(i)
+
+    def DreamSensorGlauberStep(self):
+        perms = np.random.permutation(self.size)
         for i in perms:
             self.GlauberStep(i)
 
@@ -363,7 +376,7 @@ def TimeEvolve(isings, foods, settings, folder, rep):
         interact(settings, isings, foods)
 
         for I in isings:
-            I.SequentialUpdate(settings)
+            I.SequentialGlauberStep(settings)
             I.position[:, t] = [I.xpos, I.ypos]
 
 # Dynamical Critical Learning Algorithm for poising units in a critical state
@@ -398,7 +411,7 @@ def HomeostaticGradient(isings, foods, settings, folder, rep):
         interact(settings, isings, foods)
 
         for I in isings:
-            I.SequentialUpdate(settings)
+            I.SequentialGlauberStep(settings)
             I.position[:, t] = [I.xpos, I.ypos]
             I.m += I.s
 
@@ -445,22 +458,31 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
 
     count = 0
     for rep in range(Iterations):
-        # HomeostaticGradient(isings, foods, settings, folder, rep)
         TimeEvolve(isings, foods, settings, folder, rep)
         if settings['plot'] == True:
             plt.clf()
 
         # mutationrate[0], mutationrate[1] = mutation_rate(isings)
-        fitness, fitness_stat = food_fitness(isings)
-        eat_rate = np.sum(fitness_stat)/settings['TimeSteps']
 
         if rep % settings['evolution_rate'] == 0 and settings['save_data'] == True:
+
+            fitness, fitness_stat = food_fitness(isings)
+            eat_rate = np.sum(fitness_stat)/settings['TimeSteps']
+
+            if settings['mutateB']:
+                Beta = []
+                for I in isings:
+                    Beta.append(I.Beta)
+
+                mBeta = np.mean(Beta)
+                stdBeta = np.std(Beta)
+
         # save rate equal to evolutation rate
         # TODO: Add eatrate; make this useful
             mutationrate = None
             fitm = None
             fitC = None
-            print(count, '|', eat_rate)
+            print(count, '|', eat_rate, mBeta, stdBeta)
             save_sim(folder, isings, fitness_stat, mutationrate, fitC, fitm, rep)
 
         if rep > settings['TimeStepsGrowth']:
@@ -663,6 +685,10 @@ def evolve(settings, I_old, gen):
         # load up a dummy maskJ which gets updated
         maskJ_new = np.zeros((size, size), dtype=bool)
 
+        crossover_weight = random()
+        Beta_new = (crossover_weight * org_1.Beta) + \
+                        ((1 - crossover_weight) * org_2.Beta)
+
         for iJ in range(0, size):
             crossover_weight = random()
 
@@ -692,6 +718,7 @@ def evolve(settings, I_old, gen):
         name = 'gen[' + str(gen) + ']-org[' + str(orgCount) + ']'
         I_new.append(ising(settings, size, nSensors, nMotors, name))
 
+        I_new[-1].Beta = Beta_new
         I_new[-1].J = J_new
         I_new[-1].h = h_new
         I_new[-1].maskJ = maskJ_new
@@ -786,6 +813,7 @@ def interact(settings, isings, foods):
         for food in foods:
             food_org_dist = dist(I.xpos, I.ypos, food.xpos, food.ypos)
 
+            # EAT
             if food_org_dist <= settings['org_radius']:
                 I.fitness += food.energy
                 food.respawn(settings)
@@ -811,6 +839,8 @@ def interact(settings, isings, foods):
 
 # mutate the connectivity matrix of an organism by stochastically adding/removing an edge
 def mutate(settings, I):
+    # ADDS/REMOVES RANDOM EDGE DEPENDING ON SPARSITY SETTING, RANDOMLY MUTATES ANOTHER RANDOM EDGE
+
     # expected number of disconnected edges
     numDisconnectedEdges = len(list(combinations(range(settings['numDisconnectedNeurons']), 2)))
     totalPossibleEdges = len(list(combinations(range(I.size - I.Ssize - I.Msize), 2)))
@@ -874,8 +904,29 @@ def mutate(settings, I):
             except NameError:
                 pass
 
-        else:
-            print('Connectivity Matrix Full! Mutation blocked.')
+        else:  # if connectivity matrix is full, just change an already existing edge
+            i, j = np.nonzero(connected)
+
+            randindex = np.random.randint(0, len(i))
+            ii = i[randindex]
+            jj = j[randindex]
+
+            I.J[ii, jj] = np.random.uniform(-1, 1) * I.max_weights
+
+    # MUTATE RANDOM EDGE
+    i, j = np.nonzero(I.maskJ)
+
+    randindex = np.random.randint(0, len(i))
+    ii = i[randIndex]
+    jj = j[randIndex]
+
+    I.J[ii, jj] = np.random.uniform(-1, 1) * I.max_weights
+
+    # MUTATE LOCAL TEMPERATURE
+    if settings['mutateB']:
+        deltaB = np.random.uniform(1 - float(settings['deltaB']), 1 + float(settings['deltaB']))
+        I.Beta = I.Beta * deltaB
+
 
 def update_ising(settings, I, t):
     I.SequentialUpdate(settings)

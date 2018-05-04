@@ -51,14 +51,15 @@ for rep in range(R):
         E2m = 0
         T = 100000
 
+        betaVec = betas * I.Beta  # scale by org's local temperature
         # print(agentNum)
-        I.Beta = betas[bind]
+        I.Beta = betaVec[bind]
         I.randomize_state()
         for t in range(int(T / 10)):
-            I.SequentialGlauberStep()
+            I.DreamSensorGlauberStep()
 
         for t in range(T):
-            I.SequentialGlauberStep()
+            I.DreamSensorGlauberStep()
             E = -(np.dot(I.s, I.h) + np.dot(np.dot(I.s, I.J), I.s))
             Em += E / float(T)
             E2m += E ** 2 / float(T)

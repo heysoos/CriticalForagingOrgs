@@ -20,11 +20,11 @@ settings['food_radius'] = 0.03
 settings['org_radius'] = 0.05
 
 # SIMULATION SETTINGS
-settings['TimeSteps'] = 2000  # number of timesteps per iteration
-settings['evolution_toggle'] = False
+settings['TimeSteps'] = 4000  # number of timesteps per iteration
+settings['evolution_toggle'] = True
 settings['evolution_rate'] = 1  # number of iterations to skip to kill/mate (gives more time to eat before evolution)
 
-settings['dt'] = 0.04  # simulation time step      (dt)
+settings['dt'] = 0.2  # simulation time step      (dt)
 settings['r_max'] = 720
 settings['dr_max'] = 90  # max rotational speed      (degrees per second)
 settings['v_max'] = 0.5  # max velocity              (units per second)
@@ -35,25 +35,28 @@ settings['x_max'] = 4.0  # arena western border
 settings['y_min'] = -4.0  # arena southern border
 settings['y_max'] = 4.0  # arena northern border
 
-settings['save_data'] = True
+settings['save_data'] = False
 settings['plot'] = False  # plot final generation?
 settings['TimeStepsGrowth'] = 9999  # increases TimeSteps for N iterations, if 'plot' = False, turn 'True' after some
 # iterations. Also begins saving figures after this many iterations if 'plot' setting is 'False'
 settings['plotLive'] = False  # live updates of figures
-settings['frameSkip'] = 15
+settings['frameSkip'] = 3
 
-settings['size'] = 27
+settings['size'] = 10
 settings['nSensors'] = 3
 settings['nMotors'] = 4
 settings['learningrate'] = 0.01  # 0.01
 # how many hidden neurons are not connected to each other
-settings['numDisconnectedNeurons'] = int((settings['size'] - settings['nSensors'] - settings['nMotors']) / 1.2)
+settings['numDisconnectedNeurons'] = 0 #  int((settings['size'] - settings['nSensors'] - settings['nMotors']) / 1.2)
 # how should organisms repopulate, duplicate or mate?
 settings['mateDupRatio'] = 0.5
+settings['thermalTime'] = 10
+settings['mutateB'] = True  # toggle to allow Beta (temperature) mutations (toggle off if critical learning is on)
+settings['deltaB'] = 0.2  # mutation variance for Beta
 
 settings['LoadIsings'] = True
-settings['loadfile'] = 'sim-20180131-145412'
-settings['iter'] = '12'
+settings['loadfile'] = 'sim-20180430-212611'
+settings['iter'] = '199'
 
 Iterations = 200
 
@@ -90,9 +93,9 @@ def run(settings):
             isings.append(ising(settings, size, nSensors, nMotors, name='gen[0]-org[' + str(i) + ']'))
 
     # --- CYCLE THROUGH EACH GENERATION --------------------+
-    CriticalLearning(isings, foods, settings, Iterations)
+    # CriticalLearning(isings, foods, settings, Iterations)
 
-    # EvolutionLearning(isings, foods, settings, Iterations)
+    EvolutionLearning(isings, foods, settings, Iterations)
 
     pass
 

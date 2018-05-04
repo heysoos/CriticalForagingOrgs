@@ -4,9 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 
-loadfile = 'learn_evolve'
+loadfile = 'sim-20180430-212611'
 folder = 'save/' + loadfile
-iter_gen = '25'
+iter_gen = '0'
 
 plt.rc('text', usetex=True)
 font = {'family': 'serif', 'size': 28, 'serif': ['computer modern roman']}
@@ -21,9 +21,9 @@ betas = 10 ** np.linspace(-1, 1, Nbetas)
 numAgents = 50
 C = np.zeros((R, numAgents, Nbetas))
 
-size = 27
+size = 10
 for bind in np.arange(1, 100):
-    filename = folder + '/C/C_' + iter_gen + '/C-size_' + str(size) + '-Nbetas_' + \
+    filename = folder + '/C_' + iter_gen + '/C-size_' + str(size) + '-Nbetas_' + \
                str(Nbetas) + '-bind_' + str(bind) + '.npy'
     C[:, :, bind] = np.load(filename)
 

@@ -8,12 +8,12 @@ import pickle
 from sklearn import manifold
 
 
-loadfile = 'learn_evolve'
+loadfile = 'sim-20180428-191046'
 # iter_list = [0, 25, 50, 75, 200, 500, 1000]
-iter_list = np.arange(25, 1025, 25)
+iter_list = np.arange(0, 200, 1)
 # iter_list = np.arange(0, 1002, 6*5)
 numAgents = 50
-numNeurons = 27
+numNeurons = 10
 # ---- t-SNE settings ------
 perplexity = 30
 n_iter = 1000
@@ -22,6 +22,8 @@ n_iter = 1000
 # alpha = np.linspace(0.3, 1, len(iter_list))
 # alpha = np.logspace(np.log(0.3), np.log(1), len(iter_list))
 alpha = 0.7
+
+# markersize = np.linspace(1, 10, len(iter_list))
 markersize = np.logspace(np.log(1), np.log(10), len(iter_list))
 selected = np.logspace(np.log10(1), np.log10(len(iter_list)), 4) - 1
 selected = [int(i) for i in selected]

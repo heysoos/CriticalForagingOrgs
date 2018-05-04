@@ -7,10 +7,8 @@ import pickle
 from sklearn import manifold
 
 
-loadfile = 'learn_evolve'
-iter = '1002'
-perplexity = 50
-n_iter = 1000
+loadfile = 'evolve_only_1'
+iter = 1002
 
 def upper_tri_masking(A):
     m = A.shape[0]
@@ -28,7 +26,7 @@ folder = 'save/' + loadfile
 # isings = pickle.load(open(filename, 'rb'))
 
 FOOD = []
-for iter in np.arange(0, 1002, 25):
+for iter in np.arange(0, iter, 1):
     filename = 'save/' + loadfile + '/isings/gen[' + str(iter) + ']-isings.pickle'
 
     startstr = 'Loading simulation:' + filename

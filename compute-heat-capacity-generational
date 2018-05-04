@@ -57,10 +57,10 @@ for file in glob.glob(loadstr):
             I.Beta = betas[bind]
             I.randomize_state()
             for t in range(int(T / 10)):
-                I.SequentialGlauberStep()
+                I.NoSensorGlauberStep()
 
             for t in range(T):
-                I.SequentialGlauberStep()
+                I.NoSensorGlauberStep()
                 E = -(np.dot(I.s, I.h) + np.dot(np.dot(I.s, I.J), I.s))
                 Em += E / float(T)
                 E2m += E ** 2 / float(T)
