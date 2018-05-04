@@ -55,8 +55,8 @@ settings['mutateB'] = True  # toggle to allow Beta (temperature) mutations (togg
 settings['deltaB'] = 0.2  # mutation variance for Beta
 
 settings['LoadIsings'] = True
-settings['loadfile'] = 'sim-20180430-212611'
-settings['iter'] = '199'
+settings['loadfile'] = 'sim-20180430-215748'
+settings['iter'] = '1104'
 
 Iterations = 200
 

@@ -686,8 +686,16 @@ def evolve(settings, I_old, gen):
         maskJ_new = np.zeros((size, size), dtype=bool)
 
         crossover_weight = random()
-        Beta_new = (crossover_weight * org_1.Beta) + \
-                        ((1 - crossover_weight) * org_2.Beta)
+
+        if settings['mutateB']:
+            deltaB = np.random.uniform(
+                1 - float(settings['deltaB']),
+                1 + float(settings['deltaB']))
+
+            Beta_new = (crossover_weight * org_1.Beta) + \
+                            ((1 - crossover_weight) * org_2.Beta) * deltaB
+        else:
+            Beta_new = 1
 
         for iJ in range(0, size):
             crossover_weight = random()
@@ -917,8 +925,8 @@ def mutate(settings, I):
     i, j = np.nonzero(I.maskJ)
 
     randindex = np.random.randint(0, len(i))
-    ii = i[randIndex]
-    jj = j[randIndex]
+    ii = i[randindex]
+    jj = j[randindex]
 
     I.J[ii, jj] = np.random.uniform(-1, 1) * I.max_weights
 

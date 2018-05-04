@@ -8,14 +8,14 @@ import pickle
 from sklearn import manifold
 
 
-loadfile = 'sim-20180428-191046'
+loadfile = 'sim-20180430-215748'
 # iter_list = [0, 25, 50, 75, 200, 500, 1000]
-iter_list = np.arange(0, 200, 1)
+iter_list = np.arange(0, 1104, 1)
 # iter_list = np.arange(0, 1002, 6*5)
 numAgents = 50
 numNeurons = 10
 # ---- t-SNE settings ------
-perplexity = 30
+perplexity = 50
 n_iter = 1000
 # ---- plot settings ------
 # markers = ['o', '+', '.', 'D', 's', '^', 'v', '*', 'h', 0, 1, 2, 3, 4]
