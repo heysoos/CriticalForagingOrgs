@@ -476,13 +476,15 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
 
                 mBeta = np.mean(Beta)
                 stdBeta = np.std(Beta)
+                maxBeta = np.max(Beta)
+                minBeta = np.min(Beta)
 
         # save rate equal to evolutation rate
         # TODO: Add eatrate; make this useful
             mutationrate = None
             fitm = None
             fitC = None
-            print(count, '|', eat_rate, mBeta, stdBeta)
+            print(count, '|', eat_rate, mBeta, stdBeta, minBeta, maxBeta)
             save_sim(folder, isings, fitness_stat, mutationrate, fitC, fitm, rep)
 
         if rep > settings['TimeStepsGrowth']:
@@ -654,6 +656,7 @@ def evolve(settings, I_old, gen):
         name = I_sorted[random_index].name
         I_new.append(ising(settings, size, nSensors, nMotors, name))
 
+        I_new[-1].Beta = I_sorted[random_index].Beta
         I_new[-1].J = I_sorted[random_index].J
         I_new[-1].h = I_sorted[random_index].h
         I_new[-1].maskJ = I_sorted[random_index].maskJ
@@ -695,7 +698,7 @@ def evolve(settings, I_old, gen):
             Beta_new = (crossover_weight * org_1.Beta) + \
                             ((1 - crossover_weight) * org_2.Beta) * deltaB
         else:
-            Beta_new = 1
+            Beta_new = org_1.Beta
 
         for iJ in range(0, size):
             crossover_weight = random()
