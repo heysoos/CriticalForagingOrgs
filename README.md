@@ -22,7 +22,7 @@ This file has been heavily modified, retro-fitted, and mutated to generalize the
 
 ## Critical Learning
 The details of this process are explained in the arXiv link posted above.
-One of the many requirements for this algorithm is the usage of a distrubution of correlation values sampled from a known critical system. This file is provided `correlations-ising-generalized-size83.npy'.
+One of the many requirements for this algorithm is the usage of a distrubution of correlation values sampled from a known critical system. This file is provided `correlations-ising-generalized-size83.npy`.
 
 
 ## Genetic Algorithm (GA)
