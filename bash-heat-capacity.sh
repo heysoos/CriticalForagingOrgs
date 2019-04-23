@@ -16,7 +16,7 @@
 # $(seq 101) ::: \
 # ${gens[@]}
 
-parallel --bar 'python3 compute-heat-capacity {1}' ::: $(seq 101)
+parallel --bar -j2 'python3 compute-heat-capacity {1}' ::: $(seq 101)
 
 # NUMC=$numCores
 # numCores=12

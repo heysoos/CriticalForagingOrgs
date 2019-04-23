@@ -13,34 +13,40 @@ import pickle
 settings = {}
 
 # ENVIRONMENT SETTINGS
-settings['pop_size'] = 50  # number of organisms
+settings['pop_size'] = 150  # number of organisms
 settings['numKill'] = int(settings['pop_size'] / 1.66)
 settings['food_num'] = 100  # number of food particles
 settings['food_radius'] = 0.03
 settings['org_radius'] = 0.05
+settings['ANN'] = True  # Use ANN or Ising?
+settings['BoidOn'] = True  # Only use Boid model?
 
 # SIMULATION SETTINGS
-settings['TimeSteps'] = 4000  # number of timesteps per iteration
-settings['evolution_toggle'] = True
+settings['TimeSteps'] = 2000  # number of timesteps per iteration
+
+# number of system-wide spin updates per unit of time  (multiplies computation time)
+settings['thermalTime'] = 3
+
+settings['evolution_toggle'] = False  # only toggles for CriticalLearning
 settings['evolution_rate'] = 1  # number of iterations to skip to kill/mate (gives more time to eat before evolution)
 
-settings['dt'] = 0.2  # simulation time step      (dt)
+settings['dt'] = 0.2  # kinetic time step      (dt)
 settings['r_max'] = 720
 settings['dr_max'] = 90  # max rotational speed      (degrees per second)
 settings['v_max'] = 0.5  # max velocity              (units per second)
 settings['dv_max'] = 0.05  # max acceleration (+/-)    (units per second^2)
 
-settings['x_min'] = -4.0  # arena eastern border
-settings['x_max'] = 4.0  # arena western border
-settings['y_min'] = -4.0  # arena southern border
-settings['y_max'] = 4.0  # arena northern border
+settings['x_min'] = 0.0  # arena eastern border
+settings['x_max'] = 8.0  # arena western border
+settings['y_min'] = 0.0  # arena southern border
+settings['y_max'] = 8.0  # arena northern border
 
-settings['save_data'] = False
-settings['plot'] = False  # plot final generation?
-settings['TimeStepsGrowth'] = 9999  # increases TimeSteps for N iterations, if 'plot' = False, turn 'True' after some
+settings['save_data'] = True
+settings['plot'] = True # make plots?
+settings['TimeStepsGrowth'] = 0  # increases TimeSteps for N iterations, if 'plot' = False, turn 'True' after some
 # iterations. Also begins saving figures after this many iterations if 'plot' setting is 'False'
-settings['plotLive'] = False  # live updates of figures
-settings['frameSkip'] = 3
+settings['plotLive'] = True  # live updates of figures
+settings['frameRate'] = 1
 
 settings['size'] = 10
 settings['nSensors'] = 3
@@ -50,15 +56,17 @@ settings['learningrate'] = 0.01  # 0.01
 settings['numDisconnectedNeurons'] = 0 #  int((settings['size'] - settings['nSensors'] - settings['nMotors']) / 1.2)
 # how should organisms repopulate, duplicate or mate?
 settings['mateDupRatio'] = 0.5
-settings['thermalTime'] = 10
-settings['mutateB'] = True  # toggle to allow Beta (temperature) mutations (toggle off if critical learning is on)
-settings['deltaB'] = 0.2  # mutation variance for Beta
+settings['mutationRateDup'] = 0.1  # DUPLICATION mutation rate
 
-settings['LoadIsings'] = True
-settings['loadfile'] = 'sim-20180430-215748'
-settings['iter'] = '1104'
+settings['mutateB'] = False  # toggle to allow Beta (temperature) mutations (toggle off if critical learning is on)
+settings['sigB'] = 0.02  # std for Beta mutation
 
-Iterations = 200
+settings['LoadIsings'] = False
+# settings['loadfile'] = 'sim-20180524-100859-evo'
+settings['loadfile'] = 'sim-20190226-153725'
+settings['iter'] = '482'
+
+Iterations = 1
 
 
 # --- MAIN ---------------------------------------------------------------------+
@@ -93,6 +101,11 @@ def run(settings):
             isings.append(ising(settings, size, nSensors, nMotors, name='gen[0]-org[' + str(i) + ']'))
 
     # --- CYCLE THROUGH EACH GENERATION --------------------+
+    # Choose between CriticalLearning (which has both inverse-ising and GA with toggle)
+    # or EvolutionLearning which is only GA. The functions are fairly similar, should find a
+    # better way to call them than this.
+    # ------------------------------------------------------+
+
     # CriticalLearning(isings, foods, settings, Iterations)
 
     EvolutionLearning(isings, foods, settings, Iterations)

@@ -12,15 +12,16 @@ loadfiles = ['beta_experiment/beta-1/sim-20180511-163319',
              'beta_experiment/beta-10/sim-20180512-105824',
              'beta_experiment/beta-0-1/sim-20180512-105719']
 
+iter_list = np.arange(0, 4000, 1)
+numAgents = 50
+
+autoLoad = True
+alpha = 0.002 # 1 / len(iter_list)
+
 for loadfile in loadfiles:
-    iter_list = np.arange(0, 4000, 1)
-    numAgents = 50
 
-    autoLoad = True
-    alpha = 0.002 # 1 / len(iter_list)
-
-    folder = 'save/' + loadfile + '/figs/Beta'
-    fname = folder + '/Beta_gen-' +\
+    folder = 'save/' + loadfile + '/figs/JBeta'
+    fname = folder + '/JBeta_gen-' +\
             str(iter_list[0]) + '-' + str(iter_list[1] - iter_list[0]) + \
             '-' + str(iter_list[-1]) +\
             '.npz'
@@ -29,9 +30,11 @@ for loadfile in loadfiles:
         txt = 'Loading: ' + fname
         print(txt)
         Beta = np.load(fname)['Beta']
+        mJ = np.load(fname)['mJ']
     else:
 
         Beta = np.zeros((numAgents, len(iter_list)))
+        mJ = np.zeros((numAgents, len(iter_list)))
 
         for i, iter in enumerate(iter_list):
             filename = 'save/' + loadfile + '/isings/gen[' + str(iter) + ']-isings.pickle'
@@ -43,28 +46,29 @@ for loadfile in loadfiles:
 
             for orgNum, I in enumerate(isings):
                 Beta[orgNum, i] = I.Beta
+                mJ[orgNum, i] = np.mean(I.J)
 
         if not path.exists(folder):
             makedirs(folder)
 
-        np.savez(fname, Beta=Beta)
+        np.savez(fname, Beta=Beta, mJ=mJ)
 
     plt.rc('text', usetex=True)
     font = {'family': 'serif', 'size': 28, 'serif': ['computer modern roman']}
     plt.rc('font', **font)
 
-    fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+    fig, ax = plt.subplots(1, 1, figsize=(7, 4))
     # fig.text(0.51, 0.035, r'$Generation$', ha='center', fontsize=28)
-    fig.text(0.015, 0.5, r'$\beta$', va='center', rotation='vertical', fontsize=28)
-    title = 'Local Temperatures of Organisms'
+    fig.text(0.07, 0.5, r'$J\beta$', va='center', rotation='vertical', fontsize=28)
+    title = r'Local $J\beta$ of Organisms'
     fig.suptitle(title)
     plt.tight_layout()
 
     for orgNum in range(0, numAgents):
-        ax.scatter(iter_list, Beta[orgNum, :],
+        ax.scatter(iter_list, mJ[orgNum, :]*Beta[orgNum, :],
                    color=[0, 0, 0], alpha=alpha, s=10)
 
-    figname = folder + '/Beta_gen-' +\
+    figname = folder + '/JBeta_gen-' +\
             str(iter_list[0]) + '-' + str(iter_list[1] - iter_list[0]) + \
             '-' + str(iter_list[-1]) + '.png'
     plt.savefig(figname, bbox_inches='tight', dpi=150)

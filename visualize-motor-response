@@ -3,15 +3,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-
+from os import path, makedirs
+# beta-1/sim-20180511-163319
+# beta-10/sim-20180512-105824
+# beta-0-1/sim-20180512-105719
 def dec2bin(num,num_digits):
     frmt = '{:0'
     frmt += str(num_digits)
     frmt += 'b}'
     return frmt.format(num)
 
-loadfile = 'learn_evolve'
-gen = 1000
+loadfile = 'beta_experiment/beta-0-1/sim-20180512-105719'
+gen = 3999
 motor = 'dr'
 
 plt.rc('text', usetex=True)
@@ -24,6 +27,8 @@ R = 1
 Nsens = 100
 sens = np.linspace(-1, 1, Nsens)
 numAgents = 50
+
+fontsize = 20
 
 d = np.dtype([('MV', 'f8'), ('MR', 'f8'), ('CMV', 'f8'), ('CMR', 'f8')])
 data = np.zeros((R, numAgents, Nsens), dtype=d)
@@ -40,29 +45,65 @@ for sensInd in np.arange(1, Nsens):
     data[:, :, sensInd] = np.load(filename)
 
 
-fig, ax = plt.subplots(2, 2, figsize=(5, 5), sharex=False)
-fig.text(0.5, 0.04, 'Sensory Activation (food angle)', ha='center', fontsize=36)
-fig.text(0.04, 0.72, 'Motor Response', va='center', rotation='vertical', fontsize=36)
-fig.text(0.04, 0.28, 'Motor Susceptiblity', va='center', rotation='vertical', fontsize=36)
+fig, ax = plt.subplots(2, 2, figsize=(14, 10), sharex=False)
+if motor == 'dr':
+    fig.text(0.5, 0.04, 'Sensory Activation (food angle)', ha='center', fontsize=fontsize)
+elif motor == 'dv':
+    fig.text(0.5, 0.04, 'Sensory Activation (food distance)', ha='center', fontsize=fontsize)
+elif motor == 'dp':
+    fig.text(0.5, 0.04, 'Sensory Activation (proximity sensor)', ha='center', fontsize=fontsize)
+
+fig.text(0.04, 0.72, 'Motor Response', va='center', rotation='vertical', fontsize=fontsize)
+fig.text(0.04, 0.28, 'Motor Susceptiblity', va='center', rotation='vertical', fontsize=fontsize)
 
 
 title = 'Motor Response (dv, d$\omega$) of Foraging Community\n Generation: ' + str(gen)
 fig.suptitle(title)
 
-# dist = np.sqrt( 1 / ( np.arctanh( (sens + 1 ) / 2 ) ) - 1e-6 )  #  plot as a function of distance
-theta = sens * 180
-# xticks = [np.min(dist[1:-1]), 1, 2, 4, np.max(dist[1:-1])]
-# xticks = [0.5, 1, 2, 4, 9]
-xticks = [-180, -90, 0, 90, 180]
-for iplot, name in enumerate(d.names):
+b = 0
+alpha = 0.1
+if motor == 'dr':
+    theta = sens * 180
+    xticks = [-180, -90, 0, 90, 180]
+elif motor == 'dv':
+    dist = np.sqrt( 1 / ( np.arctanh( (sens + 1 ) / 2 ) ) - 1e-6 )  #  plot as a function of distance
+    # xticks = [np.min(dist[1:-1]), 1, 2, 4, np.max(dist[1:-1])]
+    xticks = [0.5, 1, 2, 4, 9]
+elif motor == 'dp':
+    xticks = [-1, -0.5, 0, 0.5, 1]
 
-    for i in range(0,50):
-        x = int(dec2bin(iplot, 2)[0])
-        y = int(dec2bin(iplot, 2)[1])
-        ax[x, y].scatter(
-            theta[1:], np.mean(data[name][:, i, 1:],  # average across repitions
-                          axis=0), color=[0, 0, 0], s=30, alpha=0.1)
-        # ax[x, y].set_xscale("log", nonposx='clip')
+
+for iplot, name in enumerate(d.names):
+    x = int(dec2bin(iplot, 2)[0])
+    y = int(dec2bin(iplot, 2)[1])
+
+    # meanData = np.mean(np.mean(data[name][:, :, 1:],  # average across repitions
+    #                                axis=0), axis=0)
+    # if motor == 'dr':
+    #     ax[x, y].plot(
+    #         theta[1:], meanData, color=[0, 0, 0], linewidth=4)
+    # else:
+    #     ax[x, y].plot(
+    #         dist[1:], meanData, color=[0, 0, 0], linewidth=4)
+
+    for i in range(0, 50):
+
+        if motor == 'dr':
+
+            ax[x, y].scatter(
+                theta[1:], np.mean(data[name][:, i, 1:],  # average across repitions
+                              axis=0), color=[b, b, b], s=30, alpha=alpha)
+        elif motor == 'dv':
+            ax[x, y].scatter(
+                dist[1:], np.mean(data[name][:, i, 1:],  # average across repitions
+                                   axis=0), color=[b, b, b], s=30, alpha=alpha)
+        elif motor == 'dp':
+            ax[x, y].scatter(
+                sens[1:], np.mean(data[name][:, i, 1:],  # average across repitions
+                                  axis=0), color=[b, b, b], s=30, alpha=alpha)
+
+            if motor == 'dv':
+                ax[x, y].set_xscale("log", nonposx='clip')
         ax[x, y].set_xticks(xticks)
         ax[x, y].get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
         # ax[x, y].set_title(name)
@@ -71,6 +112,9 @@ ax[0, 0].set_title(r'$dv$')
 ax[0, 1].set_title(r'$d\omega$')
 ax[1, 0].set_title(r'$\sigma^2(dv)$')
 ax[1, 1].set_title(r'$\sigma^2(d\omega)$')
+
+manager = plt.get_current_fig_manager()
+manager.resize(*manager.window.maxsize())
 
 #
 # for i in range(2):
@@ -84,5 +128,11 @@ ax[1, 1].set_title(r'$\sigma^2(d\omega)$')
 
 
 # plt.axis([-1, 1, -1, 1])
-# plt.savefig('img/fig1b.pdf', bbox_inches='tight')
+figfolder = 'save/' + loadfile + '/figs/Motor_Response/'
+if not path.exists(figfolder):
+    makedirs(figfolder)
+
+figname = figfolder + motor + '-gen-' + str(gen) + '.png'
+
+plt.savefig(figname, bbox_inches='tight', dpi=150)
 plt.show()

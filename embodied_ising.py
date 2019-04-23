@@ -23,8 +23,11 @@ import os
 import pickle
 import time
 
-
-# --- CLASSES ----------------------------------------------------------------+
+# ------------------------------------------------------------------------------+
+# ------------------------------------------------------------------------------+
+# --- CLASSES ------------------------------------------------------------------+
+# ------------------------------------------------------------------------------+
+# ------------------------------------------------------------------------------+
 
 class ising:
     # Initialize the network
@@ -50,17 +53,19 @@ class ising:
 
         self.randomize_state()
 
-        self.xpos = uniform(settings['x_min'], settings['x_max'])  # position (x)
-        self.ypos = uniform(settings['y_min'], settings['y_max'])  # position (y)
+        self.randomize_position(settings)
 
-        self.r = uniform(0, 360)  # orientation   [0, 360]
-        self.v = uniform(0, settings['v_max']/3)  # velocity      [0, v_max]
-        self.dv = uniform(-settings['dv_max'], settings['dv_max'])  # dv
+        # self.r = uniform(0, 360)  # orientation   [0, 360]
+        # self.v = uniform(0, settings['v_max']/3)  # velocity      [0, v_max]
+        # self.dv = uniform(-settings['dv_max'], settings['dv_max'])  # dv
+
+        self.dx = 0
+        self.dy = 0
 
         self.name = name
 
         self.Beta = 1.0
-        self.defaultT = max(100, netsize * 20)
+        # self.defaultT = max(100, netsize * 20)
 
         self.Ssize1 = 1 # FOOD ROTATIONAL SENSOR: sigmoid(theta)
         self.Ssize2 = 1 # FOOD DISTANCE SENSOR: sigmoid(distance)
@@ -93,7 +98,8 @@ class ising:
 
         self.assign_critical_values(settings)
 
-        self.Update(settings, 0)
+        if not settings['BoidOn']:
+            self.Update(settings, 0)
 
     def get_state(self, mode='all'):
         if mode == 'all':
@@ -127,8 +133,23 @@ class ising:
         random_dorg = np.random.rand() * self.maxRange
         self.s[2] = np.tanh((random_dorg)) * 2 - 1
 
-    def randomize_position(self):
-        self.observation = self.env.reset()
+    def randomize_position(self, settings):
+        self.xpos = uniform(settings['x_min'], settings['x_max'])  # position (x)
+        self.ypos = uniform(settings['y_min'], settings['y_max'])  # position (y)
+
+        if settings['BoidOn']:
+            self.v = (np.random.randn(2) * 2 - 1) * settings['v_max']
+            self.dv = (np.random.randn(2) * 2 - 1) * settings['dv_max']
+            self.dx = self.v[0] * settings['dt']
+            self.dy = self.v[1] * settings['dt']
+            # self.r = np.abs(np.arctan(self.ypos / self.xpos))
+            self.r = np.arctan2(self.v[1], self.v[0]) * 180 / np.pi
+        else:
+            self.v = np.random.rand() * settings['v_max']
+            self.dv = np.random.rand() * settings['dv_max']
+            self.dx = self.v * cos(radians(self.r)) * settings['dt']
+            self.dy = self.v * sin(radians(self.r)) * settings['dt']
+            self.r = np.random.rand() * 360
 
     # Set random bias to sets of units of the system
     def random_fields(self, max_weights=None):
@@ -168,10 +189,10 @@ class ising:
         # print('Velocity: ' + str(self.v) +  str(self.s[-1]))
 
         # UPDATE POSITION
-        dx = self.v * cos(radians(self.r)) * settings['dt']
-        dy = self.v * sin(radians(self.r)) * settings['dt']
-        self.xpos += dx
-        self.ypos += dy
+        self.dx = self.v * cos(radians(self.r)) * settings['dt']
+        self.dy = self.v * sin(radians(self.r)) * settings['dt']
+        self.xpos += self.dx
+        self.ypos += self.dy
 
         # torus boundary conditions
         if abs(self.xpos) > settings['x_max']:
@@ -201,6 +222,27 @@ class ising:
         if self.Beta * eDiff < np.log(1.0 / np.random.rand() - 1):  # Glauber
             self.s[i] = -self.s[i]
 
+    # Execute time-step using an ANN algoirthm to update the state of all units
+    def ANNStep(self):
+
+        # SIMPLE MLP
+        af = lambda x: np.tanh(x)  # activation function
+        Jhm = self.J + np.transpose(self.J)  # connectivity for hidden/motor layers
+
+        Jh = Jhm[:, self.Ssize:-self.Msize]  # inputs to hidden neurons
+        Jm = Jhm[:, -self.Msize:]  # inputs to motor neurons
+
+        # activate and update
+        new_h = af(np.dot(self.s, Jh))
+        self.s[self.Ssize:-self.Msize] = new_h
+
+        new_m = af(np.dot(self.s, Jm))
+        self.s[-self.Msize:] = new_m
+
+        #  TODO: non-symmetric Jhm, need to change through to GA
+
+
+
     # Compute energy difference between two states with a flip of spin i
     def deltaE(self, i):
         return 2 * (self.s[i] * self.h[i] + np.sum(
@@ -221,7 +263,7 @@ class ising:
             self.Update(settings, i)
 
 
-    # Update all states of the system without restricted infuences
+    # Update all states of the system without restricted influences
     def SequentialGlauberStep(self, settings):
         thermalTime = int(settings['thermalTime'])
 
@@ -235,11 +277,25 @@ class ising:
 
         self.Move(settings) # move organism at end
 
+    # Update all states of the system without restricted influences
+    def ANNUpdate(self, settings):
+        thermalTime = int(settings['thermalTime'])
+
+        self.UpdateSensors(settings)  # update sensors at beginning
+
+        # update all other neurons a bunch of times
+        for j in range(thermalTime):
+            self.ANNStep()
+
+        self.Move(settings)  # move organism at end
+
+    # update everything except sensors
     def NoSensorGlauberStep(self):
         perms = np.random.permutation(range(self.Ssize, self.size))
         for i in perms:
             self.GlauberStep(i)
 
+    # update sensors using glauber steps (dream)
     def DreamSensorGlauberStep(self):
         perms = np.random.permutation(self.size)
         for i in perms:
@@ -291,20 +347,119 @@ class ising:
 
         C1_new = np.zeros((self.size, self.size))
 
-        count = 0
         # loop through index vector and re-sort assigned correlations to match order of actual correlations
-        for index in x:
+        # for iEdge, index in enumerate(x):
+        #     i_index = int(np.floor(index / self.size))
+        #     j_index = int(index % self.size)
+        #
+        #     condition = np.subtract(orderc1, orderc[iEdge]) == 0
+        #     # C1_index = int(np.extract(condition, orderc1))
+        #     # C1_new[i_index, j_index] = c1[C1_index]
+        #
+        #     C1_new[i_index, j_index] = c1[condition]
+        #     # C1_new[i_index, j_index] = c1[orderc1[condition]]
+
+        for i, iEdge in enumerate(orderc):
+            index = x[iEdge]
             i_index = int(np.floor(index / self.size))
             j_index = int(index % self.size)
 
-            condition = np.subtract(orderc1, orderc[count]) == 0
-            C1_index = int(np.extract(condition, orderc1))
+            # condition = np.subtract(orderc1, orderc[i]) == 0
 
-            C1_new[i_index, j_index] = c1[C1_index]
-
-            count += 1
+            C1_new[i_index, j_index] = c1[orderc1[i]]
 
         self.C1 = C1_new
+
+    # mutate the connectivity matrix of an organism by stochastically adding/removing an edge
+    def mutate(self, settings):
+        # ADDS/REMOVES RANDOM EDGE DEPENDING ON SPARSITY SETTING, RANDOMLY MUTATES ANOTHER RANDOM EDGE
+
+        # expected number of disconnected edges
+        numDisconnectedEdges = len(list(combinations(range(settings['numDisconnectedNeurons']), 2)))
+        totalPossibleEdges = len(list(combinations(range(self.size - self.Ssize - self.Msize), 2)))
+
+        # number of (dis)connected edges
+        connected = copy.deepcopy(self.maskJ)
+
+        disconnected = ~connected
+        np.fill_diagonal(disconnected, 0)
+        disconnected = np.triu(disconnected)
+
+        # things that need to be connected and not flagged to change
+        connected[0:self.Ssize, :] = 0
+        connected[:, -self.Msize:] = 0
+        # things that need to be disconnected and not flagged to change
+        disconnected[0:self.Ssize, -self.Msize:] = 0
+        disconnected[0:self.Ssize, 0:self.Ssize] = 0
+
+        numEdges = np.sum(connected)
+        # positive value means too many edges, negative value means too little
+        edgeDiff = numEdges - (totalPossibleEdges - numDisconnectedEdges)
+        # edgeDiff = numEdges - numDisconnectedEdges
+
+        # TODO: investigate the empty connectivity matrix here
+        prob = sigmoid(edgeDiff)  # probability near 1 means random edge will be removed, near 0 means random edge added
+        rand = np.random.rand()
+
+        if prob >= rand:
+            # remove random edge
+            i, j = np.nonzero(connected)
+            if len(i) > 0:
+                randindex = np.random.randint(0, len(i))
+                ii = i[randindex]
+                jj = j[randindex]
+
+                self.maskJ[ii, jj] = False
+                self.J[ii, jj] = 0
+
+                # TODO: is this a good way of making the code multi-purpose?
+                try:
+                    self.C1[ii, jj] = 0
+                except NameError:
+                    pass
+
+            else:
+                print('Connectivity Matrix Empty! Mutation Blocked.')
+
+        else:
+            # add random edge
+            i, j = np.nonzero(disconnected)
+            if len(i) > 0:
+                randindex = np.random.randint(0, len(i))
+                ii = i[randindex]
+                jj = j[randindex]
+
+                self.maskJ[ii, jj] = True
+                self.J[ii, jj] = np.random.uniform(-1, 1) * self.max_weights
+                # I.J[ii, jj] = np.random.uniform(np.min(I.J[I.Ssize:-I.Msize, I.Ssize:-I.Msize]) / 2,
+                #                                 np.max(I.J[I.Ssize:-I.Msize, I.Ssize:-I.Msize]) * 2)
+                try:
+                    self.C1[ii, jj] = settings['Cdist'][np.random.randint(0, len(settings['Cdist']))]
+                except NameError:
+                    pass
+
+            else:  # if connectivity matrix is full, just change an already existing edge
+                i, j = np.nonzero(connected)
+
+                randindex = np.random.randint(0, len(i))
+                ii = i[randindex]
+                jj = j[randindex]
+
+                self.J[ii, jj] = np.random.uniform(-1, 1) * self.max_weights
+
+        # MUTATE RANDOM EDGE
+        i, j = np.nonzero(self.maskJ)
+
+        randindex = np.random.randint(0, len(i))
+        ii = i[randindex]
+        jj = j[randindex]
+
+        self.J[ii, jj] = np.random.uniform(-1, 1) * self.max_weights
+
+        # MUTATE LOCAL TEMPERATURE
+        if settings['mutateB']:
+            deltaB = np.abs(np.random.normal(1, settings['sigB']))
+            self.Beta = self.Beta * deltaB
 
 
 class food():
@@ -318,8 +473,12 @@ class food():
         self.ypos = uniform(settings['y_min'], settings['y_max'])
         self.energy = 1
 
-
+# ------------------------------------------------------------------------------+
+# ------------------------------------------------------------------------------+
 # --- FUNCTIONS ----------------------------------------------------------------+
+# ------------------------------------------------------------------------------+
+# ------------------------------------------------------------------------------+
+
 
 def dist(x1, y1, x2, y2):
     return sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
@@ -360,14 +519,14 @@ def TimeEvolve(isings, foods, settings, folder, rep):
     # Main simulation loop:
     if settings['plot'] == True:
         plt.clf()
-        plt.ion()
+        # plt.ion()
         fig, ax = plt.subplots()
         # fig.set_size_inches(15, 10)
 
     for t in range(T):
 
         # PLOT SIMULATION FRAME
-        if settings['plot'] == True and (t % settings['frameSkip']) == 0:
+        if settings['plot'] == True and (t % settings['frameRate']) == 0:
             plot_frame(settings, folder, fig, ax, isings, foods, t, rep)
             plt.pause(1e-5)
             plt.draw()
@@ -375,9 +534,109 @@ def TimeEvolve(isings, foods, settings, folder, rep):
 
         interact(settings, isings, foods)
 
+        if settings['BoidOn']:
+            boid_update(isings, settings)
+            for I in isings:
+                I.position[:, t] = [I.xpos, I.ypos]
+
+
+        else:
+            for I in isings:
+                if settings['ANN']:
+                    I.ANNUpdate(settings)
+                else:
+                    I.SequentialGlauberStep(settings)
+                I.position[:, t] = [I.xpos, I.ypos]
+
+
+
+def TimeEvolve2(isings, BetaFactor, settings, T):
+
+
+    # --- POPULATE THE ENVIRONMENT WITH FOOD ---------------+
+    foods = []
+    for i in range(0, settings['food_num']):
+        foods.append(food(settings))
+
+    # INITIALIZATIONS
+    BetaOG = []
+    for ii, I in enumerate(isings):
+        # initialize variables
+        I.pm = np.zeros((2, 1)) # position
+        I.p2m = np.zeros((2, 1))
+
+        I.Em = 0 # np.zeros((1, T)) # mean Energy
+        I.E2m = 0 # np.zeros((1, T)) # mean Energy ** 2
+
+        I.m = 0
+        I.m2 = 0
+
+        # set temperature
+        BetaOG.append(I.Beta)
+        I.Beta = I.Beta * BetaFactor  # scale by org's local temperature
+
+        # random config
+        I.randomize_position(settings)
+        I.randomize_state()
+        I.fitness = 0
+
+    # TIME EVOLUTION / MEASUREMENTS
+    print('Thermalizing...')
+    for t in range(int(T / 10)):
+        interact(settings, isings, foods) # interact with food, update raw sensor values.
+        I.SequentialGlauberStep(settings)
+
+    print('Beginning measurements...')
+
+    if settings['plot'] == True:
+        plt.clf()
+        plt.ion()
+        fig, ax = plt.subplots()
+        folder = 'test'
+        rep = 0
+        # fig.set_size_inches(15, 10)
+
+    for t in range(T):
+        # if (t % 50) == 0 or t == 0:
+        #     print(t)
+
+        interact(settings, isings, foods)  # interact with food, update raw sensor values.
+
+        if settings['plot'] == True and (t % settings['frameRate']) == 0:
+            plot_frame(settings, folder, fig, ax, isings, foods, t, rep)
+            plt.pause(1e-5)
+            plt.draw()
+            plt.cla()
+        if settings['diagnostics'] == True and (t % settings['frameRate']) == 0:
+            fitness = 0
+            for I in isings:
+                fitness += I.fitness
+            print('t : %4i | F: %4f' % (t, fitness))
+
         for I in isings:
-            I.SequentialGlauberStep(settings)
-            I.position[:, t] = [I.xpos, I.ypos]
+            I.SequentialGlauberStep(settings) # download sensor data into neurons, think (therm.), move.
+
+            # don't include sensor neurons in measurements
+            # sus M
+            I.m += np.sum(I.s[I.Ssize:]) / float(T)
+            I.m2 += np.sum(I.s[I.Ssize:]) ** 2 / float(T)
+
+            # sus p
+            p = [I.xpos, I.ypos]
+            I.pm[:, 0] += np.divide(p, float(T))
+            I.p2m[:, 0] += np.power(p, 2) / float(T)
+
+            # heat spec.
+            E = -(np.dot(I.s[I.Ssize:], I.h[I.Ssize:]) +
+                  np.dot(np.dot(I.s[I.Ssize:], I.J[I.Ssize:, I.Ssize:]), I.s[I.Ssize:]))
+            I.Em += E / float(T)
+            I.E2m += E ** 2 / float(T)
+
+    # reset betas back to original values in case of iterated use
+    for ii, I in enumerate(isings):
+        I.Beta = BetaOG[ii]
+
+    return isings
 
 # Dynamical Critical Learning Algorithm for poising units in a critical state
 def HomeostaticGradient(isings, foods, settings, folder, rep):
@@ -386,7 +645,7 @@ def HomeostaticGradient(isings, foods, settings, folder, rep):
         I.m = np.zeros(I.size)
         I.c = np.zeros((I.size, I.size))
         I.C = np.zeros((I.size, I.size))
-        I.var = np.zeros(I.size)
+        # I.var = np.zeros(I.size)
 
         I.position = np.zeros((2, T))
 
@@ -400,7 +659,7 @@ def HomeostaticGradient(isings, foods, settings, folder, rep):
     for t in range(T):
         # print('Time = ' + str(t))
         # PLOT SIMULATION FRAME
-        if settings['plot'] == True and (t % settings['frameSkip']) == 0:
+        if settings['plot'] == True and (t % settings['frameRate']) == 0:
             plot_frame(settings, folder, fig, ax, isings, foods, t, rep)
             plt.pause(1e-5)
             plt.draw()
@@ -434,6 +693,8 @@ def HomeostaticGradient(isings, foods, settings, folder, rep):
 
         # resort correlations C1 to match the order of that of the actual C
         # TODO: Does this actually work the way it's supposed to?
+        # TODO: Multiply by the sign?
+        # TODO: frustrated critical ising models?
         I.sort_critical_correlations()
 
         I.dh = I.m1 - I.m
@@ -484,7 +745,10 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
             mutationrate = None
             fitm = None
             fitC = None
-            print(count, '|', eat_rate, mBeta, stdBeta, minBeta, maxBeta)
+            if settings['mutateB']:
+                print(count, '|', eat_rate, mBeta, stdBeta, minBeta, maxBeta)
+            else:
+                print(count, '|', eat_rate)
             save_sim(folder, isings, fitness_stat, mutationrate, fitC, fitm, rep)
 
         if rep > settings['TimeStepsGrowth']:
@@ -526,7 +790,23 @@ def CriticalLearning(isings, foods, settings, Iterations=1):
         fitness = (fitness + 1) / 2
 
         if rep % settings['evolution_rate'] == 0: # save rate linked with evolutation rate
-            fitC, fitm = calc_fit(isings, mutationrate, eat_rate, count)
+            fitC, fitm, Jmean, hmean = calc_fit(isings, mutationrate, eat_rate, count)
+
+            if settings['mutateB']:
+                Beta = []
+                for I in isings:
+                    Beta.append(I.Beta)
+
+                mBeta = np.mean(Beta)
+
+            if settings['mutateB']:
+                print('%4i | F: %4f, T: %1.3f | Fc: %1.3f, Fm: %1.3f | J: %1.3f, H: %1.3f' %
+                      (count, eat_rate, mBeta, fitC, fitm, Jmean, hmean))
+            else:
+                print('%4i | F: %4f | Fc: %1.3f, Fm: %1.3f | J: %1.3f, H: %1.3f' %
+                      (count, eat_rate, fitC, fitm, Jmean, hmean))
+
+                # print(count, '|', fitness_stat, fitC, fitm, '|', Jmean, hmean, )
             if settings['save_data'] == True:
                 save_sim(folder, isings, fitness_stat, mutationrate, fitC, fitm, rep)
 
@@ -564,8 +844,16 @@ def plot_frame(settings, folder, fig, ax, isings, foods, time, rep):
     # fig, ax = plt.subplots()
     fig.set_size_inches(9.6, 5.4)
 
-    plt.xlim([settings['x_min'] + settings['x_min'] * 0.25, settings['x_max'] + settings['x_max'] * 0.25])
-    plt.ylim([settings['y_min'] + settings['y_min'] * 0.25, settings['y_max'] + settings['y_max'] * 0.25])
+    # plt.xlim([settings['x_min'] + settings['x_min'] * 0.25,
+    #           settings['x_max'] + settings['x_max'] * 0.25])
+    # plt.ylim([settings['y_min'] + settings['y_min'] * 0.25,
+    #           settings['y_max'] + settings['y_max'] * 0.25])
+    pad = 0.5
+
+    plt.xlim([settings['x_min'] - pad,
+              settings['x_max'] + pad])
+    plt.ylim([settings['y_min'] - pad,
+              settings['y_max'] + pad])
 
     # PLOT ORGANISMS
     for I in isings:
@@ -586,8 +874,8 @@ def plot_frame(settings, folder, fig, ax, isings, foods, time, rep):
     # if settings['plotLive'] == True:
     #     plt.show()
     if settings['save_data'] == True:
-        filename = folder + 'figs/iter-' + str(rep) + 'time-' + str(time) + '.png'
-        plt.savefig(filename, dpi=100)
+        filename = folder + 'figs/iter-' + str(rep) + 'time-' + str(time).zfill(4) + '.png'
+        plt.savefig(filename, dpi=300)
     # plt.close()
 
 def calc_fit(isings, mutationrate, fitness_stat, count):
@@ -609,10 +897,7 @@ def calc_fit(isings, mutationrate, fitness_stat, count):
     Jmean = np.mean(Jmean)  # average of the highest J values
     hmean = np.mean(hmean)  # average of the highest h values
 
-    print(count, '|', fitness_stat, fitC, fitm, '|', Jmean, hmean, '|', mutationrate[1], mutationrate[0])
-
-
-    return fitC, fitm
+    return fitC, fitm, Jmean, hmean
 
 def food_fitness(isings):
     fitness = []
@@ -653,13 +938,15 @@ def evolve(settings, I_old, gen):
         candidateDup = range(0, elitism_num)
         random_index = sample(candidateDup, 1)[0]
 
-        name = I_sorted[random_index].name
+        name = copy.deepcopy(I_sorted[random_index].name) + 'm'
         I_new.append(ising(settings, size, nSensors, nMotors, name))
 
-        I_new[-1].Beta = I_sorted[random_index].Beta
-        I_new[-1].J = I_sorted[random_index].J
-        I_new[-1].h = I_sorted[random_index].h
-        I_new[-1].maskJ = I_sorted[random_index].maskJ
+        #  TODO: need to seriously check if mutations are occuring uniquely
+        # probably misusing deepcopy here, figure this shit out
+        I_new[-1].Beta = copy.deepcopy(I_sorted[random_index].Beta)
+        I_new[-1].J = copy.deepcopy(I_sorted[random_index].J)
+        I_new[-1].h = copy.deepcopy(I_sorted[random_index].h)
+        I_new[-1].maskJ = copy.deepcopy(I_sorted[random_index].maskJ)
         # I_new[-1].maskJtriu = I_sorted[random_index].maskJtriu
 
         try:
@@ -667,8 +954,9 @@ def evolve(settings, I_old, gen):
         except NameError:
             pass
 
-
-        mutate(settings, I_new[-1])
+        # MUTATE SOMETIMES
+        if np.random.random() < settings['mutationRateDup']:
+            I_new[-1].mutate(settings)
 
         # random mutations in duplication
 
@@ -690,16 +978,17 @@ def evolve(settings, I_old, gen):
 
         crossover_weight = random()
 
+        # CROSS/MUTATE TEMPERATURE
         if settings['mutateB']:
-            deltaB = np.random.uniform(
-                1 - float(settings['deltaB']),
-                1 + float(settings['deltaB']))
+            # folded normal distribution
+            deltaB = np.abs( np.random.normal(1, settings['sigB']) )
 
-            Beta_new = (crossover_weight * org_1.Beta) + \
-                            ((1 - crossover_weight) * org_2.Beta) * deltaB
+            Beta_new = ( (crossover_weight * org_1.Beta) + \
+                            ((1 - crossover_weight) * org_2.Beta) ) * deltaB
         else:
             Beta_new = org_1.Beta
 
+        # CROSS WEIGHTS
         for iJ in range(0, size):
             crossover_weight = random()
 
@@ -725,7 +1014,7 @@ def evolve(settings, I_old, gen):
                     J_new[iJ, jJ] = org_1.max_weights
 
 
-
+        # TODO: include name of parents
         name = 'gen[' + str(gen) + ']-org[' + str(orgCount) + ']'
         I_new.append(ising(settings, size, nSensors, nMotors, name))
 
@@ -734,7 +1023,8 @@ def evolve(settings, I_old, gen):
         I_new[-1].h = h_new
         I_new[-1].maskJ = maskJ_new
 
-        mutate(settings, I_new[-1])
+        # MUTATE IN GENERAL
+        I_new[-1].mutate(settings)
 
         orgCount += 1
 
@@ -848,95 +1138,7 @@ def interact(settings, isings, foods):
 
                 I.org_sens += ((dot_org_heading * I.radius) / (org_org_dist + 1e-6) ** 2)
 
-# mutate the connectivity matrix of an organism by stochastically adding/removing an edge
-def mutate(settings, I):
-    # ADDS/REMOVES RANDOM EDGE DEPENDING ON SPARSITY SETTING, RANDOMLY MUTATES ANOTHER RANDOM EDGE
 
-    # expected number of disconnected edges
-    numDisconnectedEdges = len(list(combinations(range(settings['numDisconnectedNeurons']), 2)))
-    totalPossibleEdges = len(list(combinations(range(I.size - I.Ssize - I.Msize), 2)))
-
-    # number of (dis)connected edges
-    connected = copy.deepcopy(I.maskJ)
-
-    disconnected = ~connected
-    np.fill_diagonal(disconnected, 0)
-    disconnected = np.triu(disconnected)
-
-    # things that need to be connected and not flagged to change
-    connected[0:I.Ssize, :] = 0
-    connected[:, -I.Msize:] = 0
-    # things that need to be disconnected and not flagged to change
-    disconnected[0:I.Ssize, -I.Msize:] = 0
-    disconnected[0:I.Ssize, 0:I.Ssize] = 0
-
-    numEdges = np.sum(connected)
-    # positive value means too many edges, negative value means too little
-    edgeDiff = numEdges - (totalPossibleEdges - numDisconnectedEdges)
-    # edgeDiff = numEdges - numDisconnectedEdges
-
-    prob = sigmoid(edgeDiff)  # probability near 1 means random edge will be removed, near 0 means random edge added
-    rand = np.random.rand()
-
-    if prob >= rand:
-        # remove random edge
-        i, j = np.nonzero(connected)
-        if len(i) > 0:
-            randindex = np.random.randint(0, len(i))
-            ii = i[randindex]
-            jj = j[randindex]
-
-            I.maskJ[ii, jj] = False
-            I.J[ii, jj] = 0
-
-            # TODO: is this a good way of making the code multi-purpose?
-            try:
-                I.C1[ii, jj] = 0
-            except NameError:
-                pass
-
-        else:
-            print('Connectivity Matrix Empty! Mutation Blocked.')
-
-    else:
-        # add random edge
-        i, j = np.nonzero(disconnected)
-        if len(i) > 0:
-            randindex = np.random.randint(0, len(i))
-            ii = i[randindex]
-            jj = j[randindex]
-
-            I.maskJ[ii, jj] = True
-            I.J[ii, jj] = np.random.uniform(-1, 1) * I.max_weights
-            # I.J[ii, jj] = np.random.uniform(np.min(I.J[I.Ssize:-I.Msize, I.Ssize:-I.Msize]) / 2,
-            #                                 np.max(I.J[I.Ssize:-I.Msize, I.Ssize:-I.Msize]) * 2)
-            try:
-                I.C1[ii, jj] = settings['Cdist'][np.random.randint(0, len(settings['Cdist']))]
-            except NameError:
-                pass
-
-        else:  # if connectivity matrix is full, just change an already existing edge
-            i, j = np.nonzero(connected)
-
-            randindex = np.random.randint(0, len(i))
-            ii = i[randindex]
-            jj = j[randindex]
-
-            I.J[ii, jj] = np.random.uniform(-1, 1) * I.max_weights
-
-    # MUTATE RANDOM EDGE
-    i, j = np.nonzero(I.maskJ)
-
-    randindex = np.random.randint(0, len(i))
-    ii = i[randindex]
-    jj = j[randindex]
-
-    I.J[ii, jj] = np.random.uniform(-1, 1) * I.max_weights
-
-    # MUTATE LOCAL TEMPERATURE
-    if settings['mutateB']:
-        deltaB = np.random.uniform(1 - float(settings['deltaB']), 1 + float(settings['deltaB']))
-        I.Beta = I.Beta * deltaB
 
 
 def update_ising(settings, I, t):
@@ -946,4 +1148,199 @@ def update_ising(settings, I, t):
 
     for iS in range(I.size):
         I.c[iS, iS + 1:] += I.s[iS] * I.s[iS + 1:]
+
+
+#####################################
+# BOID THINGS
+#####################################
+
+def boid_dv(isings, settings):
+    vision_radius = 0.75
+    N = len(isings)
+    combos = list(combinations(range(0, len(isings)), r=2))
+
+    ## CALCULATE CUMULATIVE AVERAGES
+    # t_center = np.zeros(2)
+    # t_velocity = np.zeros(2)
+    pos_list = np.zeros((len(isings), 2))
+    vel_list = np.zeros((len(isings), 2))
+    for i, I in enumerate(isings):
+        pos_list[i, :] = np.array((I.xpos, I.ypos))
+        vel_list[i, :] = np.array((I.dx, I.dy))
+        # t_center += pos_i
+        # t_velocity += np.array((I.dx, I.dy))
+
+    ## CALCULATE DISTANCE MATRIX
+    dist_mat = np.zeros((len(isings), len(isings), 2))
+    for pair in combos:
+        ii = pair[0]
+        jj = pair[1]
+
+        pos_i = pos_list[ii]
+        pos_j = pos_list[jj]
+
+        dist_mat[ii, jj, :] = pointing_vector(pos_i, pos_j, settings)
+        dist_mat[jj, ii, :] = -dist_mat[ii, jj, :]
+
+    # for RULE 3: alternate form: (1/d^2 - 1/d^3)
+
+    radius_mat = np.linalg.norm(dist_mat, axis=-1)  # used as a radius to localize global information by weighting
+    radius_mat = np.dstack([radius_mat] * 2)
+    # radius_mat = np.divide(radius_mat, np.sum(radius_mat, axis=0)).transpose()
+    # radius_mat = np.multiply(radius_mat, np.sum(zeronaninf(1 / radius_mat), axis=0)).transpose()
+    vision_mat = radius_mat < vision_radius
+    # vision_mat = np.dstack([vision_mat] * 2)
+
+
+    # corr_mat = -1 * np.sign(dist_mat) / np.dstack([np.power(radius_mat, 2)] * 2)
+    # corr_mat[np.isinf(corr_mat)] = 0
+    # corr_mat[np.isnan(corr_mat)] = 0
+
+    localized_info = {}
+    # localized_info['pos'] = np.divide(np.tile(pos_list, (len(isings), 1, 1)), np.dstack([np.power(radius_mat, 2)] * 2))
+    # localized_info['corr'] = np.tanh(corr_mat)  # already 1/r^2 dependant
+    # localized_info['vel'] = np.divide(np.tile(vel_list, (len(isings), 1, 1)), np.dstack([radius_mat] * 2))
+
+    # pos_mat = np.tile(pos_list, (len(isings), 1, 1))
+    # vel_mat = np.tile(vel_list, (len(isings), 1, 1))
+
+    # localized_info['pos'] = np.tile(pos_list, (len(isings), 1, 1))
+    localized_info['corr'] = np.divide(-1 * dist_mat, np.power(radius_mat, 2))
+    localized_info['vel']  = np.tile(vel_list, (len(isings), 1, 1))
+
+
+    for key, value in localized_info.items():
+        new_value = zeronaninf(value)
+        # new_value = np.tanh(value)
+        localized_info.update({key: new_value})
+
+    # corr_mat = np.tanh(corr_mat)
+
+    ## CALCULATE INDIVIDUAL BOID FORCES
+    for i, Ii in enumerate(isings):
+        position_i = np.array((Ii.xpos, Ii.ypos))
+        velocity_i = np.array((Ii.dx, Ii.dy))
+
+        # RULE 1: percieved center
+        # p_center_i = t_center - position_i
+        # p_center_i = np.sum(localize_boid_info(pos_list, radius_mat[i, :]), axis=0)
+        # p_center_i = (np.sum(
+        #     localized_info['pos'][i, :, :] * vision_mat[i, :, :], axis=0) /
+        #               np.sum(vision_mat[i, :, :], axis=0))
+
+        cohesion_vector = (np.sum(dist_mat[i, :, :] * vision_mat[i, :, :], axis=0) /
+                           np. sum(vision_mat[i, :, :], axis=0))
+
+        # RULE 2: percieved correction
+        # p_corr_i = np.sum(corr_mat[i, :, :], axis=0)
+        # p_corr_i = np.sum(localize_boid_info(corr_mat[i, :, :], radius_mat[i, :]), axis=0)
+        repulsion_vector = (np.sum(
+            localized_info['corr'][i, :, :] * vision_mat[i, :, :], axis=0) /
+                   np.sum(vision_mat[i, :, :], axis=0))
+
+        # RULE 3: percieved velocity
+        # p_velocity_i = t_velocity - velocity_i
+        # p_velocity_i = np.sum(localize_boid_info(vel_list, radius_mat[i, :]), axis=0)
+        p_velocity_i = (np.sum(
+            localized_info['vel'][i, :, :] * vision_mat[i, :, :], axis=0) /
+                       np.sum(vision_mat[i, :, :], axis=0))
+
+        # average
+        # p_center_i /= (N - 1)
+        # p_corr_i /= (N - 1)
+        # p_velocity_i /= (N - 1)
+        random_dv = np.random.normal(size=2)
+
+        # dv1 = p_center_i - position_i
+        # dv2 = p_corr_i
+        # dv3 = p_velocity_i - velocity_i
+
+        # dv1 = p_center_i - position_i
+        # dv2 = p_corr_i
+        # dv3 = p_velocity_i - velocity_i
+
+        # update
+        # dv1 = 1 * (p_center_i - position_i)
+        # dv2 = 0.1 * p_corr_i
+        dv3 = 1 * (p_velocity_i - velocity_i)
+        # dv4 = 0.001 * random_dv
+        Ii.dvb = cohesion_vector + (0.2 * repulsion_vector) + dv3 + (0.005 * random_dv)
+
+def boid_move(isings, settings):
+    for I in isings:
+        # dvb = I.dv1 + I.dv2 + I.dv3 + I.dv4
+        # normdvb = np.linalg.norm(dvb)
+        # if normdvb > settings['dv_max']:
+        #     dvb /= normdvb
+        #     I.dvb = dvb * settings['dv_max']
+        # else:
+        #     I.dvb = dvb
+
+        I.v += I.dvb * settings['dt']
+        I.r = np.arctan2(I.v[1], I.v[0]) * 180 / np.pi
+
+        mag_v = np.sqrt(np.sum(np.power(I.v, 2)))
+
+        if mag_v > settings['v_max']:
+            I.v /= mag_v / settings['v_max']
+
+        I.dx = I.v[0] * settings['dt']
+        I.dy = I.v[1] * settings['dt']
+        I.xpos += I.dx
+        I.ypos += I.dy
+
+        # torus boundary conditions
+        I.xpos = (I.xpos + settings['x_max']) % settings['x_max']
+        I.ypos = (I.ypos + settings['y_max']) % settings['y_max']
+
+        # if abs(I.xpos) > settings['x_max']:
+        #     # I.xpos = -I.xpos
+        #     # I.xpos = -1 * np.sign(I.xpos) * settings['x_max']
+        #     I.xpos = -1 * np.sign(I.xpos) * (settings['x_max'] - np.abs(I.xpos) % settings['x_max'])
+        #
+        # if abs(I.ypos) > settings['y_max']:
+        #     # I.ypos = -I.ypos
+        #     # I.ypos = -1 * np.sign(I.ypos) * settings['y_max']
+        #     I.ypos = -1 * np.sign(I.ypos) * (settings['y_max'] - np.abs(I.ypos) % settings['y_max'])
+
+# Derivative of neuron output
+def transfer_derivative(output):
+    return (1 - np.power(np.tanh(output), 2))
+
+# Backpropogate error and update neuron weights
+# def boid_backprop_error(isings):
+#
+#     for I in isings:
+#         I.error =
+
+
+# def boid_learn(isings):
+#     boid_dv(isings)  # calculate boid dv
+#     boid_backprop_error(isings)  # calculate error w.r.t. boid activations
+
+def boid_update(isings, settings):
+    boid_dv(isings, settings)  # Calculate boid dv
+    boid_move(isings, settings)  # Apply boid dv
+
+def localize_boid_info(global_vec, dist_vec):
+    normalized = np.divide(global_vec, np.transpose(np.tile(dist_vec, (2,1))))
+    normalized = zeronaninf(normalized)
+    return normalized
+
+def zeronaninf(mat):
+    mat[np.isinf(mat)] = 0
+    mat[np.isnan(mat)] = 0
+    return mat
+
+def pointing_vector(pos_i, pos_j, settings):
+    L = [settings['x_max'] - settings['x_min'], settings['y_max'] - settings['y_min']]
+    diff = pos_j - pos_i
+    for dim in range(len(L)):
+        diff[dim] = (diff[dim] +
+                     (np.abs(diff[dim]) > L[dim] / 2) * -1 * (1 - 2 * (diff[dim] < L[dim] / 2)) * L[dim])
+    return diff
+# def boid_error(isings):
+#
+#
+# def af_derivative(self):
 

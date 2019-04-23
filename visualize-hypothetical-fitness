@@ -1,0 +1,106 @@
+#!/usr/bin/env python
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib
+from os import path, makedirs
+# beta-1/sim-20180511-163319
+# beta-10/sim-20180512-105824
+# beta-0-1/sim-20180512-105719
+# TODO: make these scripts take these as params
+loadfiles = ['beta_experiment/beta-1/sim-20180511-163319',
+             'beta_experiment/beta-10/sim-20180512-105824',
+             'beta_experiment/beta-0-1/sim-20180512-105719']
+
+saveFig = True
+
+for loadfile in loadfiles:
+    folder = 'save/' + loadfile
+    # iter_gen = np.arange(0, 2000, 250)
+    # iter_gen = np.append(iter_gen, 1999)
+    # iter_gen = [0, 252, 504, 756, 1002, 1254, 1500, 1752, 1998]
+    # iter_gen = [0, 1, 2, 5, 10, 20, 50, 100, 250, 1000, 1999,
+    #             2250, 2500, 2750, 3000, 3250, 3500, 3750, 3999]
+    iter_gen = [0, 3999]
+
+    R = 5
+    Nbetas = 101
+    betas = 10 ** np.linspace(-1, 1, Nbetas)
+    numAgents = 50
+    size = 10
+
+    F = np.zeros((R, numAgents, Nbetas, len(iter_gen)))
+
+    print('Loading data...')
+    for ii, iter in enumerate(iter_gen):
+        for bind in np.arange(1, 101):
+            filename = folder + '/C-S-natural/C-S-natural_' + str(iter) + '/C-S-size_' + str(size) + '-Nbetas_' + \
+                       str(Nbetas) + '-bind_' + str(bind) + '.npz'
+            data = np.load(filename)
+            F[:, :, bind, ii] = data['F']
+    print('Done.')
+
+    plt.rc('text', usetex=True)
+    font = {'family': 'serif', 'size': 28, 'serif': ['computer modern roman']}
+    plt.rc('font', **font)
+    plt.rc('legend', **{'fontsize': 20})
+
+    b = 0.8
+    alpha = 0.05
+
+    print('Generating figures...')
+    for ii, iter in enumerate(iter_gen):
+
+        fig, ax = plt.subplots(1, 1, figsize=(8, 5))
+        # fig.text(0.51, 0.035, r'$\beta$', ha='center', fontsize=28)
+        # fig.text(0.005, 0.5, r'$C/N$', va='center', rotation='vertical', fontsize=28)
+        title = 'Hypothetical Fitness\n Generation: ' + str(iter)
+        ax.set_ylabel(r'$Fitness$')
+        ax.set_xlabel(r'$\beta$')
+        plt.title(title)
+        # fig.suptitle(title)
+
+        # CHANGE THIS TO CUSTOMIZE HEIGHT OF PLOT
+        # upperbound = 1.5 * np.max(np.mean(np.mean(C[:, :, :-40, :], axis=0), axis=0))
+        # upperbound = np.max(np.mean(np.mean(C, axis=0)), axis=0)
+        # upperbound = 0.4
+
+        label = iter
+
+        for numOrg in range(numAgents):
+            for rep in range(R):
+                ax.scatter(betas[1:-1], F[rep, numOrg, 1:-1, ii],
+                           color=[0, 0, 0], s=30, alpha=alpha, marker='x', label=label)
+
+
+        xticks = [0.1, 0.5, 1, 2, 10]
+        ax.set_xscale("log", nonposx='clip')
+        # ax[i, j].set_yscale("log", nonposy='clip')
+        ax.set_xticks(xticks)
+        ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+        plt.xlim(0.1,10)
+
+        # plt.axis([0.1, 10, 0, upperbound])
+
+        # leg = plt.legend(loc=2, title='Generation')
+        #
+        # for lh in leg.legendHandles:
+        #     lh.set_alpha(1)
+        #     lh.set_sizes(30)
+
+        savefolder = folder + '/figs/fitness-hypothetical/'
+        savefilename = savefolder + 'fitness-hypothetical-size_' + str(size) + '-Nbetas_' + \
+                       str(Nbetas) + '-gen_' + str(iter) + '.png'
+        if not path.exists(savefolder):
+            makedirs(savefolder)
+
+        plt.tight_layout()
+        # plt.show()
+        if saveFig:
+            plt.savefig(savefilename, dpi=300)
+            savemsg = 'Saving ' + savefilename
+            print(savemsg)
+        # plt.close()
+        # plt.clf()
+plt.show()
+    # plt.pause(0.1)

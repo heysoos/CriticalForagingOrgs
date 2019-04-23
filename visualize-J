@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+
+import numpy as np
+from scipy.special import comb
+import matplotlib.pyplot as plt
+from matplotlib import colors
+import pickle
+from os import path, makedirs
+
+# beta-1/sim-20180511-163319
+# beta-10/sim-20180512-105824
+# beta-0-1/sim-20180512-105719
+# loadfiles = ['beta_experiment/beta-1/sim-20180511-163319',
+#              'beta_experiment/beta-10/sim-20180512-105824',
+#              'beta_experiment/beta-0-1/sim-20180512-105719']
+
+loadfiles = ['sim-20190226-153725']
+iter_list = np.arange(0, 482, 1)
+numAgents = 50
+numNeurons = 10
+
+autoLoad = True
+alpha = 0.02 # 1 / len(iter_list)
+markersize = 1.7
+cmap = plt.get_cmap('plasma')
+
+
+def upper_tri_masking(A):
+    m = A.shape[0]
+    r = np.arange(m)
+    mask = r[:, None] < r
+    return A[mask]
+
+for loadfile in loadfiles:
+
+    folder = 'save/' + loadfile + '/figs/J'
+    fname = folder + '/J_gen-' +\
+            str(iter_list[0]) + '-' + str(iter_list[1] - iter_list[0]) + \
+            '-' + str(iter_list[-1]) +\
+            '.npz'
+
+    if path.isfile(fname) and autoLoad:
+        txt = 'Loading: ' + fname
+        print(txt)
+        J = np.load(fname)['J']
+    else:
+
+        J = np.zeros(( numAgents, int(comb(numNeurons, 2)), len(iter_list) ))
+
+        for i, iter in enumerate(iter_list):
+            filename = 'save/' + loadfile + '/isings/gen[' + str(iter) + ']-isings.pickle'
+
+            startstr = 'Loading simulation:' + filename
+            print(startstr)
+
+            isings = pickle.load(open(filename, 'rb'))
+
+            for orgNum, I in enumerate(isings):
+                J[orgNum, :, i] = upper_tri_masking(I.J)
+
+        if not path.exists(folder):
+            makedirs(folder)
+
+        np.savez(fname, J=J)
+
+    numEdges = J.shape[1]
+    norm = colors.Normalize(vmin=0, vmax=numEdges)  # age/color mapping
+
+    # plt.rc('text', usetex=True)
+    # font = {'family': 'serif', 'size': 28, 'serif': ['computer modern roman']}
+    # plt.rc('font', **font)
+
+    fig, ax = plt.subplots(1, 1, figsize=(19, 10))
+    # fig.text(0.51, 0.035, r'$Generation$', ha='center', fontsize=28)
+    fig.text(0.015, 0.5, r'$J$', va='center', rotation='vertical', fontsize=28)
+    title = r'Local $J$ of Organisms'
+    fig.suptitle(title)
+
+
+    for edge in range(0, numEdges):
+        for orgNum in range(0, numAgents):
+            ax.scatter(iter_list, J[orgNum, edge, :],
+                       color=cmap(norm(edge)), alpha=alpha, s=markersize)
+
+    # plt.tight_layout()
+
+    figname = folder + '/J_gen-' +\
+            str(iter_list[0]) + '-' + str(iter_list[1] - iter_list[0]) + \
+            '-' + str(iter_list[-1]) + '.png'
+    plt.savefig(figname, dpi=300)
+plt.show()
