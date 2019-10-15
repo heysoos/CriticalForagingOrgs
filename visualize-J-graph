@@ -1,0 +1,52 @@
+#!/usr/bin/env python
+
+import numpy as np
+from scipy.special import comb
+import matplotlib.pyplot as plt
+from matplotlib import colors
+import pandas as pd
+import networkx as nx
+import pickle
+from os import path, makedirs
+
+
+loadfile = 'beta_experiment/beta-1/sim-20180511-163357'
+iter_list = np.arange(0, 2000, 1)
+numAgents = 50
+numNeurons = 10
+
+autoLoad = True
+alpha = 0.002 # 1 / len(iter_list)
+cmap = plt.get_cmap('plasma')
+
+folder = 'save/' + loadfile + '/figs/J'
+fname = folder + '/J-graph_gen-' +\
+        str(iter_list[0]) + '-' + str(iter_list[1] - iter_list[0]) + \
+        '-' + str(iter_list[-1]) +\
+        '.npz'
+
+iter = 1999
+
+filename = 'save/' + loadfile + '/isings/gen[' + str(iter) + ']-isings.pickle'
+
+startstr = 'Loading simulation:' + filename
+print(startstr)
+
+isings = pickle.load(open(filename, 'rb'))
+
+J = isings[0].J
+J = J + np.transpose(J)
+J[:,0:3] = 0
+J[abs(J)<0.3] = 0
+
+df = pd.DataFrame(J, index=range(J.shape[0]), columns=range(J.shape[1]))
+G = nx.from_pandas_adjacency(df, create_using=nx.DiGraph())
+nx.draw(G, with_labels=True, node_size=1500, node_color="skyblue",
+        pos=nx.spectral_layout(G))
+plt.show()
+
+# figname = folder + '/J_gen-' +\
+#         str(iter_list[0]) + '-' + str(iter_list[1] - iter_list[0]) + \
+#         '-' + str(iter_list[-1]) + '.png'
+# plt.savefig(figname, bbox_inches='tight', dpi=150)
+# plt.show()

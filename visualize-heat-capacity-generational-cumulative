@@ -1,0 +1,150 @@
+#!/usr/bin/env python
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib
+from matplotlib import colors
+from matplotlib.lines import Line2D
+from os import path, makedirs
+
+
+# TODO: make these scripts take these as params
+# beta-1/sim-20180511-163319
+# beta-10/sim-20180512-105824
+# beta-0-1/sim-20180512-105719
+loadfile = 'beta_experiment/beta-0-1/sim-20180512-105719'
+folder = 'save/' + loadfile
+saveFigBool = True
+# iter_gen = np.arange(0, 2000, 250)
+# iter_gen = np.append(iter_gen, 1999)
+# iter_gen = [0, 252, 504, 756, 1002, 1254, 1500, 1752, 1998]
+# iter_gen = [0, 1, 2, 5, 10, 20, 50, 100, 250, 1000, 1999]
+# iter_gen = [0, 1, 2, 5, 10, 20, 50, 100, 250, 1000, 1999,
+#             2250, 2500, 2750, 3000, 3250, 3500, 3750, 3999]
+iter_gen = [0, 1, 2, 5, 10, 20, 50, 100, 250, 500, 750, 1000,
+            1250, 1500, 1750, 1999, 2250, 2500, 2750, 3000, 3250,
+            3500, 3750, 3999]
+
+
+
+R = 5
+Nbetas = 101
+betas = 10 ** np.linspace(-1, 1, Nbetas)
+numAgents = 50
+size = 10
+# selected = np.linspace(0, len(iter_list) - 1, 4)
+selected = [0, 1000, 2000, 3000, 3999]
+selected = [int(i) for i in selected]
+
+
+# cmap = plt.get_cmap('viridis')
+cmap = plt.get_cmap('RdYlBu')
+# cmap = plt.get_cmap('PRGn')
+norm = colors.Normalize(vmin=0, vmax=len(iter_gen))  # age/color mapping
+
+
+C = np.zeros((R, numAgents, Nbetas, len(iter_gen)))
+
+print('Loading data...')
+for ii, iter in enumerate(iter_gen):
+    for bind in np.arange(1, 100):
+        filename = folder + '/C/C_' + str(iter) + '/C-size_' + str(size) + '-Nbetas_' + \
+                   str(Nbetas) + '-bind_' + str(bind) + '.npy'
+        C[:, :, bind, ii] = np.load(filename)
+print('Done.')
+
+plt.rc('text', usetex=True)
+font = {'family': 'serif', 'size': 28, 'serif': ['computer modern roman']}
+plt.rc('font', **font)
+plt.rc('legend', **{'fontsize': 20})
+
+b = 0.8
+# alpha = 0.1
+# alpha = np.logspace(np.log10(0.1), np.log10(0.2), len(iter_gen))
+alpha = (np.linspace(-1, 1, len(iter_gen)) / 3  ) ** 6 + 1/10
+s = np.linspace(4, 11, len(iter_gen))
+
+fig, ax = plt.subplots(1, 1, figsize=(11, 10), sharex=True)
+fig.text(0.51, 0.035, r'$\beta$', ha='center', fontsize=28)
+fig.text(0.005, 0.5, r'$C/N$', va='center', rotation='vertical', fontsize=28)
+title = 'Specific Heat of Foraging Community\n Generation: ' + str(iter_gen[0]) + '-' + str(iter_gen[-1])
+fig.suptitle(title)
+
+# CHANGE THIS TO CUSTOMIZE HEIGHT OF PLOT
+# upperbound = 1.5 * np.max(np.mean(np.mean(C[:, :, :-40, :], axis=0), axis=0))
+upperbound = 0.4
+# upperbound = np.max(np.mean(np.mean(C, axis=0)), axis=0)
+
+ls = 'solid'
+
+print('Generating figures...')
+for ii, iter in enumerate(iter_gen[::-1]):
+    c = cmap(norm(ii))
+
+    if ii in selected:
+        label = str(iter)
+    else:
+        label = None
+
+    for numOrg in range(numAgents):
+        # c = np.dot(np.random.random(), [1, 1, 1])
+        ax.scatter(betas, np.mean(C[:, numOrg, :, ii], axis=0),
+                   label=label, color=c, s=7, alpha=alpha[ii])
+    #     ## EXPERIMENT
+    #     ax.plot(betas, np.mean(C[:, numOrg, :, ii], axis=0),
+    #             color='k', alpha=0.01, linestyle=ls, linewidth=2)
+    #     ax.plot(betas, np.mean(C[:, numOrg, :, ii], axis=0),
+    #                color='w', alpha=0.05, linestyle=ls, linewidth=1)
+
+    ## EXPERIMENT 2
+
+# for ii, iter in enumerate(iter_gen):
+#     C2 = np.mean(C[:, :, :, ii], axis=0)
+#     C3 = np.mean(C2, axis=0)
+#     # c = np.dot(np.random.random(), [1, 1, 1])
+#     # ax.scatter(betas, C3,
+#     #            color='k', s=2, alpha=0.2)
+#     ax.plot(betas, C3,
+#                color='w', alpha=0.8, lw=1)
+
+# black = [255, 255, 255]
+# for ii, iter in enumerate(iter_gen):
+#     c = cmap(norm(ii))
+#     for numOrg in range(numAgents):
+#         # c = np.dot(np.random.random(), [1, 1, 1])
+#         ax.scatter(betas, np.mean(C[:, numOrg, :, ii], axis=0),
+#                    c=black, s=2, alpha=alpha[ii])
+
+xticks = [0.1, 0.5, 1, 2, 4, 10]
+ax.set_xscale("log", nonposx='clip')
+ax.set_xticks(xticks)
+ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+
+plt.axis([0.1, 10, 0, upperbound])
+
+custom_legend = [ Line2D([0], [0], marker='o', color='w',
+                          markerfacecolor=cmap(0.), markersize=15),
+                 Line2D([0], [0], marker='o', color='w',
+                          markerfacecolor=cmap(0.33), markersize=15),
+                 Line2D([0], [0], marker='o', color='w',
+                        markerfacecolor=cmap(.67), markersize=15),
+                 Line2D([0], [0], marker='o', color='w',
+                        markerfacecolor=cmap(1.), markersize=15)]
+
+
+ax.legend(custom_legend, ['Gen 0 ', ' ', '', 'Gen 3999'])
+
+savefolder = folder + '/figs/C/'
+savefilename = savefolder + 'C_cumulative-size_' + str(size) + '-Nbetas_' + \
+               str(Nbetas) + '-gen_' + str(iter_gen[0]) + '-' + str(iter_gen[-1]) + '.png'
+if not path.exists(savefolder):
+    makedirs(savefolder)
+#
+if saveFigBool:
+    plt.savefig(savefilename, bbox_inches='tight', dpi=150)
+    # plt.close()
+
+    savemsg = 'Saving ' + savefilename
+    print(savemsg)
+plt.show()
+# plt.pause(0.1)
