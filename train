@@ -22,10 +22,10 @@ def create_settings():
     settings['food_radius'] = 0.03
     settings['org_radius'] = 0.05
     settings['ANN'] = False  # Use ANN or Ising?
-    settings['BoidOn'] = False  # Only use Boid model? #True #True
+    settings['BoidOn'] = False  # Only use Boid model? #True
     
     # SIMULATION SETTINGS
-    settings['TimeSteps'] = 30  # number of timesteps per iteration #2000
+    settings['TimeSteps'] = 4000  # number of timesteps per iteration #2000
     
     # number of system-wide spin updates per unit of time  (multiplies computation time)
     settings['thermalTime'] = 3
@@ -44,11 +44,11 @@ def create_settings():
     settings['y_min'] = 0.0  # arena southern border
     settings['y_max'] = 8.0  # arena northern border
     
-    settings['save_data'] = False
-    settings['plot'] = True # make plots?
-    settings['TimeStepsGrowth'] = 0  # increases TimeSteps for N iterations, if 'plot' = False, turn 'True' after some
+    settings['save_data'] = True
+    settings['plot'] = False # make plots?
+    settings['plot_n_last_generations'] = 1  # switches on plotting for n last generations
     # iterations. Also begins saving figures after this many iterations if 'plot' setting is 'False'
-    settings['plotLive'] = True  # live updates of figures
+    settings['plotLive'] = False  # live updates of figures
     settings['frameRate'] = 1
     
     settings['size'] = 10
@@ -72,17 +72,19 @@ def create_settings():
     #Seasons
     settings['seasons'] = True #BOO; Activates seasons
     settings['years_per_iteration'] = 1 #INT amount of seasonal changes per iteration
-    settings['min_food_winter'] = 0.1 #FLOAT [0,1]; relative decimation of food in winter
+    settings['min_food_winter'] = 0.5 #FLOAT [0,1]; relative decimation of food in winter
     
     settings['parallel_computing'] = False #BOO
     settings['cores'] = 4 #INT if 0 number is determined automatically
     
-    settings['energy_model'] = True #BOO
+    settings['energy_model'] = False #BOO
     settings['v_min'] = 0.05 #FLOAT [0,1]
     settings['cost_speed'] = 0.05 #FLOAT [0,1] energy cost of speed as a facor of speed
     
-    Iterations = 1
-    
+    Iterations = 2000
+
+
+
     return settings, Iterations
 
 

@@ -143,7 +143,7 @@ class ising:
         self.s[1] = np.tanh(self.radius / (random_dfood ** 2 + 1e-6)) * 2 - 1
 
         random_dorg = np.random.rand() * self.maxRange
-        self.s[2] = np.tanh((random_dorg)) * 2 - 1
+        self.s[2] = np.tanh(random_dorg) * 2 - 1
 
     def randomize_position(self, settings):
         self.xpos = uniform(settings['x_min'], settings['x_max'])  # position (x)
@@ -206,7 +206,7 @@ class ising:
             self.r = settings['r_max']
         
         if settings['energy_model']:
-            #ENergy cost for speed
+            #Energy cost for speed
             if self.energy <= 0 and self.v > settings['v_min']:
                 self.v = settings['v_min']
             else:
@@ -645,7 +645,7 @@ def TimeEvolve(isings, foods, settings, folder, rep):
 
 #Helper functions parallelization
 def parallelSequGlauberStep(I, settings):
-    #I = copy.deepcopy(I)
+    # I = copy.deepcopy(I)
     I.SequentialGlauberStep()
     return I
 
@@ -659,7 +659,7 @@ def TimeEvolve2(isings, BetaFactor, settings, T):
     '''
 
 
-    # --- POPULATE THE ENVIRONMENT WITH FOOD ---------------+
+    #--- POPULATE THE ENVIRONMENT WITH FOOD ---------------+
     foods = []
     for i in range(0, settings['food_num']):
         foods.append(food(settings))
@@ -867,7 +867,7 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
                 print(count, '|', eat_rate)
             save_sim(folder, isings, fitness_stat, mutationrate, fitC, fitm, rep)
 
-        if rep > settings['TimeStepsGrowth']:
+        if rep > (Iterations - settings['plot_n_last_generations']):
             settings['plot'] = True
 
         count += 1
@@ -1042,6 +1042,7 @@ def evolve(settings, I_old, gen):
     '''
     !!!Sort after fitness!!!
     '''
+    
     I_sorted = sorted(I_old, key=operator.attrgetter('fitness'), reverse=True)
     I_new = []
 
@@ -1074,7 +1075,7 @@ def evolve(settings, I_old, gen):
         # I_new[-1].maskJtriu = I_sorted[random_index].maskJtriu
         
         '''
-        oly important with critical learning
+        only important with critical learning
         '''
         try:
             I_new[-1].C1 = I_sorted[random_index].C1
