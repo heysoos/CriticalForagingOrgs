@@ -311,13 +311,6 @@ class ising:
 
     # Update all states of the system without restricted influences
     def SequentialGlauberStep(self, settings):
-        '''
-        Utilized variables: settings['thermalTime'], self.Ssize, self.size
-
-        GlauberStep
-        Utilizes: self.s, self.h, self.J
-        Modifies: self.s
-        '''
         thermalTime = int(settings['thermalTime'])
 
         self.UpdateSensors(settings) # update sensors at beginning
@@ -621,21 +614,7 @@ def TimeEvolve(isings, foods, settings, folder, rep):
             
             if settings['ANN']:
                 I.ANNUpdate(settings)
-                '''
-                else:
-                    if settings['parallel_computing'] == True:
-                        results = []
-                        if settings['cores'] == 0:
-                            pool = mp.Pool(mp.cpu_count()-1)
-                        else:
-                            pool = mp.Pool(settings['cores'])
-                        for I in isings:
-                            pool.apply_async(parallelSequGlauberStep,
-                                             args=(I, settings), callback = collect_result)
-                        pool.close()
-                        pool.join()
-                        isings = results
-                '''
+
             else:
                 if settings['parallel_computing']:
                     parallelizedSequGlauberSteps(isings, settings)
