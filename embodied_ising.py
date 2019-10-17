@@ -312,7 +312,11 @@ class ising:
     # Update all states of the system without restricted influences
     def SequentialGlauberStep(self, settings):
         '''
-        Utilized instances: settings['thermalTime'], self.Ssize, self.size
+        Utilized variables: settings['thermalTime'], self.Ssize, self.size
+
+        GlauberStep
+        Utilizes: self.s, self.h, self.J
+        Modifies: self.s
         '''
         thermalTime = int(settings['thermalTime'])
 
@@ -617,20 +621,24 @@ def TimeEvolve(isings, foods, settings, folder, rep):
             
             if settings['ANN']:
                 I.ANNUpdate(settings)
+                '''
+                else:
+                    if settings['parallel_computing'] == True:
+                        results = []
+                        if settings['cores'] == 0:
+                            pool = mp.Pool(mp.cpu_count()-1)
+                        else:
+                            pool = mp.Pool(settings['cores'])
+                        for I in isings:
+                            pool.apply_async(parallelSequGlauberStep,
+                                             args=(I, settings), callback = collect_result)
+                        pool.close()
+                        pool.join()
+                        isings = results
+                '''
             else:
-                if settings['parallel_computing'] == True:
-                    results = []
-                    if settings['cores'] == 0:
-                        pool = mp.Pool(mp.cpu_count()-1)
-                    else:
-                        pool = mp.Pool(settings['cores'])
-                    for I in isings:
-                        pool.apply_async(parallelSequGlauberStep,
-                                         args=(I, settings), callback = collect_result)
-                    pool.close()
-                    pool.join()
-                    isings = results
-
+                if settings['parallel_computing']:
+                    parallelizedSequGlauberSteps(isings, settings)
                 else:
                     for I in isings:
                         I.SequentialGlauberStep(settings)
@@ -646,12 +654,62 @@ def TimeEvolve(isings, foods, settings, folder, rep):
                     I.SequentialGlauberStep(settings)
                 I.position[:, t] = [I.xpos, I.ypos]
             '''
-
+'''
 #Helper functions parallelization
 def parallelSequGlauberStep(I, settings):
     # I = copy.deepcopy(I)
     I.SequentialGlauberStep()
     return I
+'''
+def parallelizedSequGlauberSteps(isings, settings):
+    '''
+    Utilized variables: settings['thermalTime'], self.Ssize, self.size
+
+    GlauberStep
+    Utilizes: self.s, self.h, self.J
+    Modifies: self.s
+    '''
+
+    if settings['cores'] == 0:
+        pool = mp.Pool(mp.cpu_count() - 1)
+    else:
+        pool = mp.Pool(settings['cores'])
+    for I in isings:
+        I.UpdateSensors(settings) # update sensors at beginning
+        # pass_vars = (settings, I.Ssize, I.size, I.s, I.h, I.J, I.Beta)
+        # pool.apply_async(parallelizedSequGlauberStep, args=(pass_vars), callback=collect_result)
+    vars_list = [(settings, I.Ssize, I.size, I.s, I.h, I.J, I.Beta) for I in isings]
+    s_list = pool.map(parallelizedSequGlauberStep, vars_list)
+    pool.close()
+    #pool.join()
+
+    # = results
+
+    for i, I in enumerate(isings):
+        I.s = s_list[i]
+        I.Move(settings)  # move organism at end
+
+def parallelizedSequGlauberStep(pass_vars):
+    settings, Ssize, size, s, h, J, Beta = pass_vars
+    thermalTime = int(settings['thermalTime'])
+
+    # update all other neurons a bunch of times
+    for j in range(thermalTime):
+        perms = np.random.permutation(range(Ssize, size))
+        for i in perms:
+            s_fac = GlauberStepParallel(i, s, h, J, Beta, size)
+            s[i] = s[i] * s_fac
+    return s
+
+
+def GlauberStepParallel(i, s, h, J, Beta, size):
+    eDiff = 2 * s[i] * (h[i] + np.dot(J[i, :] + J[:, i], s))
+    if Beta * eDiff < np.log(1.0 / np.random.rand() - 1):  # Glauber
+        return -1
+    else:
+        return 1
+
+
 
 def collect_result(result):
     global results

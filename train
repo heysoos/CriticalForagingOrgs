@@ -74,7 +74,7 @@ def create_settings():
     settings['years_per_iteration'] = 1 #INT amount of seasonal changes per iteration
     settings['min_food_winter'] = 0.5 #FLOAT [0,1]; relative decimation of food in winter
     
-    settings['parallel_computing'] = False #BOO
+    settings['parallel_computing'] = True #BOO
     settings['cores'] = 4 #INT if 0 number is determined automatically
     
     settings['energy_model'] = False #BOO
