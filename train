@@ -44,7 +44,7 @@ def create_settings():
     settings['y_min'] = 0.0  # arena southern border
     settings['y_max'] = 8.0  # arena northern border
     
-    settings['save_data'] = True
+    settings['save_data'] = False
     settings['plot'] = False # make plots?
     settings['plot_n_last_generations'] = 1  # switches on plotting for n last generations
     # iterations. Also begins saving figures after this many iterations if 'plot' setting is 'False'

@@ -46,12 +46,12 @@ class ising:
         self.Msize = Nmotors  # Number of sensors
         self.radius = settings['org_radius']
 
-        self.h = np.zeros(netsize)
+        self.h = np.zeros(netsize) # TODO: is this bias, does this ever go over [0 0 0 0 0]???????
 
         # self.J = np.zeros((self.size, self.size))
 
         self.J = np.random.random((self.size, self.size))*2 - 1
-        self.J = (self.J + self.J.T) / 2
+        self.J = (self.J + self.J.T) / 2 #Connectivity Matrix
         np.fill_diagonal(self.J, 0)
 
         self.max_weights = 2
@@ -60,8 +60,9 @@ class ising:
                              (settings['y_max'] - settings['y_min']) ** 2)
 
         self.randomize_state()
-
-        self.randomize_position(settings)
+        self.xpos = 0.0 #Position
+        self.ypos = 0.0
+        self.randomize_position(settings) #randomize position
 
         # self.r = uniform(0, 360)  # orientation   [0, 360]
         # self.v = uniform(0, settings['v_max']/3)  # velocity      [0, v_max]
@@ -109,6 +110,7 @@ class ising:
         self.energy = 0
 
         self.assign_critical_values(settings)
+
 
         if not settings['BoidOn']:
             self.Update(settings, 0)
@@ -170,12 +172,15 @@ class ising:
             self.dy = self.v * sin(radians(self.r)) * settings['dt']
             
 
+
+    '''
+    NOT USED
     # Set random bias to sets of units of the system
     def random_fields(self, max_weights=None):
         if max_weights is None:
             max_weights = self.max_weights
         self.h[self.Ssize:] = max_weights * (np.random.rand(self.size - self.Ssize) * 2 - 1)
-
+    '''
     # Set random connections to sets of units of the system
     def random_wiring(self, max_weights=None):  # Set random values for h and J
         if max_weights is None:
@@ -204,21 +209,13 @@ class ising:
 
         if self.r > settings['r_max']:
             self.r = settings['r_max']
-        
+
         if settings['energy_model']:
-            #Energy cost for speed
+            #Energy cost for speed, if no energy then minimal speed (only if organism wants to go faster than minimal speed)
             if self.energy <= 0 and self.v > settings['v_min']:
                 self.v = settings['v_min']
             else:
                 self.energy -= self.v * settings['cost_speed']
-                
-            
-        
-        '''
-        !!!Hier v_min einbauen min velocity
-        introduce an ising.E property
-        then potentially have velocity(Energy, motors)
-        '''
 
         # print('Velocity: ' + str(self.v) +  str(self.s[-1]))
 
@@ -251,6 +248,10 @@ class ising:
     # Execute step of the Glauber algorithm to update the state of one unit
     
     def GlauberStep(self, i=None):
+        '''
+        Utilizes: self.s, self.h, self.J
+        Modifies: self.s
+        '''
         if i is None:
             i = np.random.randint(self.size)
         eDiff = 2 * self.s[i] * (self.h[i] + np.dot(self.J[i, :] + self.J[:, i], self.s))
@@ -267,7 +268,7 @@ class ising:
             self.s[i] = -self.s[i]
     '''
 
-    # Execute time-step using an ANN algoirthm to update the state of all units
+    # Execute time-step using an ANN algorithm to update the state of all units
     def ANNStep(self):
 
         # SIMPLE MLP
@@ -310,6 +311,9 @@ class ising:
 
     # Update all states of the system without restricted influences
     def SequentialGlauberStep(self, settings):
+        '''
+        Utilized instances: settings['thermalTime'], self.Ssize, self.size
+        '''
         thermalTime = int(settings['thermalTime'])
 
         self.UpdateSensors(settings) # update sensors at beginning
@@ -626,7 +630,7 @@ def TimeEvolve(isings, foods, settings, folder, rep):
                     pool.close()
                     pool.join()
                     isings = results
-                    local_vars = inspect.currentframe().f_locals
+
                 else:
                     for I in isings:
                         I.SequentialGlauberStep(settings)
@@ -1042,8 +1046,10 @@ def evolve(settings, I_old, gen):
     '''
     !!!Sort after fitness!!!
     '''
-    
-    I_sorted = sorted(I_old, key=operator.attrgetter('fitness'), reverse=True)
+    if settings['energy_model']:
+        I_sorted = sorted(I_old, key=operator.attrgetter('energy'), reverse=True)
+    else:
+        I_sorted = sorted(I_old, key=operator.attrgetter('fitness'), reverse=True)
     I_new = []
 
     alive_num = int(settings['pop_size'] - settings['numKill'])
