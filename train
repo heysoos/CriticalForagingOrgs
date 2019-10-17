@@ -80,6 +80,7 @@ def create_settings():
     settings['energy_model'] = False #BOO
     settings['v_min'] = 0.05 #FLOAT [0,1]
     settings['cost_speed'] = 0.05 #FLOAT [0,1] energy cost of speed as a facor of speed
+
     
     Iterations = 2000
 

@@ -108,6 +108,8 @@ class ising:
         self.org_sens = 0 # directional, 1/distance ** 2 weighted organism sensor
         self.fitness = 0
         self.energy = 0
+        self.energies = []
+        self.avg_energy = 0
 
         self.assign_critical_values(settings)
 
@@ -171,7 +173,9 @@ class ising:
             self.dx = self.v * cos(radians(self.r)) * settings['dt']
             self.dy = self.v * sin(radians(self.r)) * settings['dt']
             
-
+    def append_energy(self, energy):
+        self.energies.append(energy)
+        self.avg_energy = np.average(self.energies)
 
     '''
     NOT USED
@@ -589,6 +593,7 @@ def TimeEvolve(isings, foods, settings, folder, rep):
         '''
         can optimize interact with matrix calculations instead of loops
         '''
+
         interact(settings, isings, foods)
         
         '''
@@ -1084,7 +1089,8 @@ def evolve(settings, I_old, gen):
     !!!Sort after fitness!!!
     '''
     if settings['energy_model']:
-        I_sorted = sorted(I_old, key=operator.attrgetter('energy'), reverse=True)
+        #Sorting according to average energy
+        I_sorted = sorted(I_old, key=operator.attrgetter('avg_energy'), reverse=True)
     else:
         I_sorted = sorted(I_old, key=operator.attrgetter('fitness'), reverse=True)
     I_new = []
@@ -1324,6 +1330,8 @@ def interact(settings, isings, foods):
         I.d_food = I.maxRange
         I.r_food = 0
         I.org_sens = 0
+        if settings['energy_model']:
+            I.energies.append(I.energy)
 
         for food in foods:
             food_org_dist = dist(I.xpos, I.ypos, food.xpos, food.ypos)
