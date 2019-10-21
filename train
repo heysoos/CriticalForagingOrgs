@@ -25,8 +25,8 @@ def create_settings():
     settings['BoidOn'] = False  # Only use Boid model? #True
     
     # SIMULATION SETTINGS
-    settings['TimeSteps'] = 4000  # number of timesteps per iteration #2000
-    
+    settings['TimeSteps'] = 2000  # number of timesteps per iteration #2000
+
     # number of system-wide spin updates per unit of time  (multiplies computation time)
     settings['thermalTime'] = 3
     
@@ -45,7 +45,7 @@ def create_settings():
     settings['y_max'] = 8.0  # arena northern border
     
     settings['save_data'] = False
-    settings['plot'] = False # make plots?
+    settings['plot'] = True # make plots?
     settings['plot_n_last_generations'] = 1  # switches on plotting for n last generations
     # iterations. Also begins saving figures after this many iterations if 'plot' setting is 'False'
     settings['plotLive'] = False  # live updates of figures
@@ -77,12 +77,13 @@ def create_settings():
     settings['parallel_computing'] = True #BOO
     settings['cores'] = 4 #INT if 0 number is determined automatically
     
-    settings['energy_model'] = False #BOO
+    settings['energy_model'] = True #BOO
     settings['v_min'] = 0.05 #FLOAT [0,1]
-    settings['cost_speed'] = 0.05 #FLOAT [0,1] energy cost of speed as a facor of speed
+    settings['cost_speed'] = 0.025 #FLOAT [0,1] energy cost of speed as a factor of speed #before 0.5
 
     
     Iterations = 2000
+
 
 
 
@@ -142,6 +143,7 @@ def run(settings):
 # --- RUN ----------------------------------------------------------------------+
 
 if __name__ ==  '__main__':
+    avg_speed =
     settings, Iterations = create_settings()
     run(settings)
 

@@ -7,12 +7,14 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Circle
 import pickle
 from os import makedirs, path
-
+'''
 loadfiles = ['beta_experiment/beta-0-1/sim-20180512-105719',
              'beta_experiment/beta-1/sim-20180511-163319',
              'beta_experiment/beta-10/sim-20180512-105824']
+'''
+loadfiles = ['sim-20191017-015956']
 
-numAgents = 50
+numAgents = 150
 autoLoad = True
 saveFigBool = True
 fixGen2000 = False
@@ -30,7 +32,7 @@ fixGen2000 = False
 new_order = [2, 0, 1]
 
 labels = [r'$\beta_i = 0.1$', r'$\beta_i = 1$', r'$\_i = 10$']
-iter_list = np.arange(0, 4000, 1)
+iter_list = np.arange(0, 50, 1)
 cmap = plt.get_cmap('seismic')
 norm = colors.Normalize(vmin=0, vmax=len(loadfiles))  # age/color mapping
 # norm = [[194, 48, 32, 255],
@@ -159,17 +161,21 @@ ax.legend(custom_legend, [r'$\beta = 10$', r'$\beta = 1$', r'$\beta = 0.1$'], lo
     # ax.set_xticks(xticks)
     # ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
 
+folder = 'save/' + loadfile
+savefolder = folder + '/figs/fitness_combined/'
+savefilename = savefolder + 'fitness_gen_' + str(iter_list[0]) + '-' + str(iter_list[-1]) + '.png'
+if not path.exists(savefolder):
+    makedirs(savefolder)
 
-    # savefolder = folder + '/figs/fitness/'
-    # savefilename = savefolder + 'fitness_gen_' + str(iter_list[0]) + '-' + str(iter_list[-1]) + '.png'
-    # if not path.exists(savefolder):
-    #     makedirs(savefolder)
-    #
-    # if saveFigBool:
-    #     plt.savefig(savefilename, bbox_inches='tight', dpi=150)
-    #     # plt.close()
-    #
-    #     savemsg = 'Saving ' + savefilename
-    #     print(savemsg)
+if saveFigBool:
+    plt.savefig(savefilename, bbox_inches='tight', dpi=150)
+    # plt.close()
 
+    savemsg = 'Saving ' + savefilename
+    print(savemsg)
+
+# if saveFigBool:
+#     savefolder = folder + '/figs/fitness/'
+#     savefilename = savefolder + 'fitness_gen_' + str(iter_list[0]) + '-' + str(iter_list[-1]) + '.png'
+#     plt.savefig(bbox_inches = 'tight', dpi = 300)
 plt.show()

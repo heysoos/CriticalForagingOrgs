@@ -11,9 +11,9 @@ from os import makedirs, path
 # beta-10/sim-20180512-105824
 # beta-0-1/sim-20180512-105719
 # loadfile = 'beta_experiment/beta-0-1/sim-20180512-105719'
-loadfile = 'sim-20191010-151959_nice_noboid'
+loadfile = 'sim-20191017-015956'
 # iter = 2000
-iter_list = np.arange(0, 1, 1)
+iter_list = np.arange(0, 50, 1)
 numAgents = 150
 saveFigBool = True
 

@@ -579,7 +579,9 @@ def TimeEvolve(isings, foods, settings, folder, rep):
     !!! iterating through timesteps
     '''
     for t in range(T):
-        print(len(foods))
+        #print(len(foods))
+
+        print('\r', 'Iteration {0} of {1}'.format(t, T), end='') #, end='\r'
         if settings['seasons'] == True:
             foods = seasons(settings, foods, t, T)
 
@@ -645,7 +647,7 @@ def parallelSequGlauberStep(I, settings):
     I.SequentialGlauberStep()
     return I
 '''
-def parallelizedSequGlauberSteps(isings, settings):
+def parallelizedSequGlauberSteps(isings, settings, asynchronous = False):
     '''
     Utilized variables: settings['thermalTime'], self.Ssize, self.size
 
@@ -653,25 +655,39 @@ def parallelizedSequGlauberSteps(isings, settings):
     Utilizes: self.s, self.h, self.J
     Modifies: self.s
     '''
+    if not asynchronous:
 
-    if settings['cores'] == 0:
-        pool = mp.Pool(mp.cpu_count() - 1)
-    else:
-        pool = mp.Pool(settings['cores'])
-    for I in isings:
-        I.UpdateSensors(settings) # update sensors at beginning
-        # pass_vars = (settings, I.Ssize, I.size, I.s, I.h, I.J, I.Beta)
-        # pool.apply_async(parallelizedSequGlauberStep, args=(pass_vars), callback=collect_result)
-    vars_list = [(settings, I.Ssize, I.size, I.s, I.h, I.J, I.Beta) for I in isings]
-    s_list = pool.map(parallelizedSequGlauberStep, vars_list)
-    pool.close()
-    #pool.join()
+        if settings['cores'] == 0:
+            pool = mp.Pool(mp.cpu_count() - 1)
+        else:
+            pool = mp.Pool(settings['cores'])
 
-    # = results
+        if not asynchronous:
+            for I in isings:
+                I.UpdateSensors(settings) # update sensors at beginning
+                # pass_vars = (settings, I.Ssize, I.size, I.s, I.h, I.J, I.Beta)
+                # pool.apply_async(parallelizedSequGlauberStep, args=(pass_vars), callback=collect_result)
+            vars_list = [(settings, I.Ssize, I.size, I.s, I.h, I.J, I.Beta) for I in isings]
+            s_list = pool.map(parallelizedSequGlauberStep, vars_list)
+            pool.close()
+            #pool.join()
 
-    for i, I in enumerate(isings):
-        I.s = s_list[i]
-        I.Move(settings)  # move organism at end
+            # = results
+
+            for i, I in enumerate(isings):
+                I.s = s_list[i]
+                I.Move(settings)  # move organism at end
+        else:
+            for I in isings:
+                I.UpdateSensors(settings)  # update sensors at beginning
+            # pass_vars = (settings, I.Ssize, I.size, I.s, I.h, I.J, I.Beta)
+            # pool.apply_async(parallelizedSequGlauberStep, args=(pass_vars), callback=collect_result)
+            vars_list = [(settings, I.Ssize, I.size, I.s, I.h, I.J, I.Beta) for I in isings]
+            s_list = pool.map_async(parallelizedSequGlauberStep, vars_list)
+            pool.close()
+            pool.join()
+
+
 
 def parallelizedSequGlauberStep(pass_vars):
     settings, Ssize, size, s, h, J, Beta = pass_vars
@@ -890,7 +906,7 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
         if rep % settings['evolution_rate'] == 0 and settings['save_data'] == True:
 
             fitness, fitness_stat = food_fitness(isings)
-            eat_rate = np.sum(fitness_stat)/settings['TimeSteps']
+            eat_rate = np.sum(fitness_stat)/settings['TimeSteps'] #avg fitnes, normalized by timestep
 
             if settings['mutateB']:
                 Beta = []
@@ -907,10 +923,12 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
             mutationrate = None
             fitm = None
             fitC = None
+            if  settings['energy_model']:
+                eat_rate = np.average([I.avg_energy for I in isings])
             if settings['mutateB']:
-                print(count, '|', eat_rate, mBeta, stdBeta, minBeta, maxBeta)
+                print('\n', count, '|', eat_rate, mBeta, stdBeta, minBeta, maxBeta)
             else:
-                print(count, '|', eat_rate)
+                print('\n', count, '|', eat_rate)
             save_sim(folder, isings, fitness_stat, mutationrate, fitC, fitm, rep)
 
         if rep > (Iterations - settings['plot_n_last_generations']):

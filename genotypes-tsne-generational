@@ -12,11 +12,12 @@ from os import path, makedirs
 # beta-1/sim-20180511-163319
 # beta-10/sim-20180512-105824
 # beta-0-1/sim-20180512-105719
-loadfile = 'sim-20190226-153725'
+loadfile = 'sim-20191017-015956'
 # iter_list = [0, 25, 50, 75, 200, 500, 1000]
-iter_list = np.arange(0, 482, 2)
+#iter_list = np.arange(0, 482, 2)
+iter_list=np.arange(0,50)
 # iter_list = np.arange(0, 2000, 6)
-numAgents = 50
+numAgents = 150
 numNeurons = 10
 # ---- t-SNE settings ------
 autoLoad = True
@@ -25,9 +26,9 @@ loadFit = False
 transposeJ = False
 
 perplexity = 30
-n_iter = 1000
+n_iter = 2000
 # ---- plot settings ------
-saveFigBool = False
+saveFigBool = True
 
 scatter3d = False
 # markers = ['o', '+', '.', 'D', 's', '^', 'v', '*', 'h', 0, 1, 2, 3, 4]
