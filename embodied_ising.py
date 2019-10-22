@@ -172,10 +172,7 @@ class ising:
             self.dv = np.random.rand() * settings['dv_max']
             self.dx = self.v * cos(radians(self.r)) * settings['dt']
             self.dy = self.v * sin(radians(self.r)) * settings['dt']
-            
-    def append_energy(self, energy):
-        self.energies.append(energy)
-        self.avg_energy = np.average(self.energies)
+
 
     '''
     NOT USED
@@ -563,7 +560,11 @@ def bitfield(n, size):
 
 
 def TimeEvolve(isings, foods, settings, folder, rep):
-    
+
+    if settings['energy_model']:
+        for I in isings:
+            I.energies = []  # Clear .energies, that .avg_energy is calculated from with each iteration
+
     T = settings['TimeSteps']
     for I in isings:
         I.position = np.zeros((2, T))
@@ -597,12 +598,6 @@ def TimeEvolve(isings, foods, settings, folder, rep):
         '''
 
         interact(settings, isings, foods)
-        
-        '''
-        Boid setting
-        
-        '''
-        
 
             
         
@@ -1104,10 +1099,12 @@ def evolve(settings, I_old, gen):
     nMotors = settings['nMotors']
     
     '''
-    !!!Sort after fitness!!!
+    !!!fitness function!!!
     '''
     if settings['energy_model']:
         #Sorting according to average energy
+        for I in isings:
+            I.avg_energy = np.average(I.energies)
         I_sorted = sorted(I_old, key=operator.attrgetter('avg_energy'), reverse=True)
     else:
         I_sorted = sorted(I_old, key=operator.attrgetter('fitness'), reverse=True)
@@ -1229,6 +1226,10 @@ def evolve(settings, I_old, gen):
     return I_new
 
 def save_sim(folder, isings, fitness_stat, mutationrate, fitC, fitm, gen):
+    if settings['energy_model']:
+        # Clear I.energies before saving
+        for I in isings:
+            I.energies = []
     filenameI = folder + 'isings/gen[' + str(gen) + ']-isings.pickle'
     filenameS = folder + 'stats/gen[' + str(gen) + ']-stats.pickle'
 

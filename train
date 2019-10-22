@@ -44,8 +44,8 @@ def create_settings():
     settings['y_min'] = 0.0  # arena southern border
     settings['y_max'] = 8.0  # arena northern border
     
-    settings['save_data'] = False
-    settings['plot'] = True # make plots?
+    settings['save_data'] = True
+    settings['plot'] = False # make plots?
     settings['plot_n_last_generations'] = 1  # switches on plotting for n last generations
     # iterations. Also begins saving figures after this many iterations if 'plot' setting is 'False'
     settings['plotLive'] = False  # live updates of figures
@@ -74,7 +74,7 @@ def create_settings():
     settings['years_per_iteration'] = 1 #INT amount of seasonal changes per iteration
     settings['min_food_winter'] = 0.5 #FLOAT [0,1]; relative decimation of food in winter
     
-    settings['parallel_computing'] = True #BOO
+    settings['parallel_computing'] = False #BOO
     settings['cores'] = 4 #INT if 0 number is determined automatically
     
     settings['energy_model'] = True #BOO
@@ -143,7 +143,6 @@ def run(settings):
 # --- RUN ----------------------------------------------------------------------+
 
 if __name__ ==  '__main__':
-    avg_speed =
     settings, Iterations = create_settings()
     run(settings)
 
