@@ -107,7 +107,7 @@ class ising:
         self.r_food = 0  # orientation to nearest food
         self.org_sens = 0 # directional, 1/distance ** 2 weighted organism sensor
         self.fitness = 0
-        self.energy = 0
+        self.energy = 0.0
         self.energies = []
         self.avg_energy = 0
 
@@ -564,6 +564,7 @@ def TimeEvolve(isings, foods, settings, folder, rep):
     if settings['energy_model']:
         for I in isings:
             I.energies = []  # Clear .energies, that .avg_energy is calculated from with each iteration
+            I.energy = settings['initial_energy']  # Setting initial energy
 
     T = settings['TimeSteps']
     for I in isings:
@@ -582,7 +583,8 @@ def TimeEvolve(isings, foods, settings, folder, rep):
     for t in range(T):
         #print(len(foods))
 
-        print('\r', 'Iteration {0} of {1}'.format(t, T), end='') #, end='\r'
+        # print('\r', 'Iteration {0} of {1}'.format(t, T), end='') #, end='\r'
+        print('\r', 'Tstep {0}/{1}'.format(t, T), end='')  # , end='\r'
         if settings['seasons'] == True:
             foods = seasons(settings, foods, t, T)
 
@@ -643,13 +645,7 @@ def parallelSequGlauberStep(I, settings):
     return I
 '''
 def parallelizedSequGlauberSteps(isings, settings, asynchronous = False):
-    '''
-    Utilized variables: settings['thermalTime'], self.Ssize, self.size
 
-    GlauberStep
-    Utilizes: self.s, self.h, self.J
-    Modifies: self.s
-    '''
     if not asynchronous:
 
         if settings['cores'] == 0:
@@ -921,10 +917,17 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
             if  settings['energy_model']:
                 eat_rate = np.average([I.avg_energy for I in isings])
             if settings['mutateB']:
-                print('\n', count, '|', eat_rate, mBeta, stdBeta, minBeta, maxBeta)
+                print('\n', count, '|', 'avg_Fitness', eat_rate, 'mean_Beta', mBeta,
+                      'std_Beta', stdBeta, 'min_Beta', minBeta, 'max_Beta', maxBeta)
             else:
-                print('\n', count, '|', eat_rate)
-            save_sim(folder, isings, fitness_stat, mutationrate, fitC, fitm, rep)
+                print('\n', count, '|', 'Avg_fitness', eat_rate)
+
+            if settings['energy_model']:
+                # Clear I.energies in isings_copy before saving
+                isings_copy = deepcopy(isings)
+                for I in isings_copy:
+                    I.energies = []
+            save_sim(folder, isings_copy, fitness_stat, mutationrate, fitC, fitm, rep)
 
         if rep > (Iterations - settings['plot_n_last_generations']):
             settings['plot'] = True
@@ -937,6 +940,10 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
             Evolution via GA! According to evolution rate done every nth iteration
             Does every evolution event represent one generation?
             '''
+            if settings['energy_model']:
+                # Calculate average / median energy
+                for I in isings:
+                    I.avg_energy = np.median(I.energies)  # Average or median better?
             isings = evolve(settings, isings, rep)
 
 def CriticalLearning(isings, foods, settings, Iterations=1):
@@ -1102,9 +1109,6 @@ def evolve(settings, I_old, gen):
     !!!fitness function!!!
     '''
     if settings['energy_model']:
-        #Sorting according to average energy
-        for I in isings:
-            I.avg_energy = np.average(I.energies)
         I_sorted = sorted(I_old, key=operator.attrgetter('avg_energy'), reverse=True)
     else:
         I_sorted = sorted(I_old, key=operator.attrgetter('fitness'), reverse=True)
@@ -1226,10 +1230,7 @@ def evolve(settings, I_old, gen):
     return I_new
 
 def save_sim(folder, isings, fitness_stat, mutationrate, fitC, fitm, gen):
-    if settings['energy_model']:
-        # Clear I.energies before saving
-        for I in isings:
-            I.energies = []
+
     filenameI = folder + 'isings/gen[' + str(gen) + ']-isings.pickle'
     filenameS = folder + 'stats/gen[' + str(gen) + ']-stats.pickle'
 

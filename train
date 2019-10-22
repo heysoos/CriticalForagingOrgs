@@ -36,7 +36,7 @@ def create_settings():
     settings['dt'] = 0.2  # kinetic time step      (dt)
     settings['r_max'] = 720
     settings['dr_max'] = 90  # max rotational speed      (degrees per second)
-    settings['v_max'] = 0.5  # max velocity              (units per second)
+    settings['v_max'] = 999  # 0.5 max velocity              (units per second)
     settings['dv_max'] = 0.05  # max acceleration (+/-)    (units per second^2)
     
     settings['x_min'] = 0.0  # arena eastern border
@@ -78,8 +78,9 @@ def create_settings():
     settings['cores'] = 4 #INT if 0 number is determined automatically
     
     settings['energy_model'] = True #BOO
-    settings['v_min'] = 0.05 #FLOAT [0,1]
-    settings['cost_speed'] = 0.025 #FLOAT [0,1] energy cost of speed as a factor of speed #before 0.5
+    settings['v_min'] = 0.05  # FLOAT [0,1)
+    settings['cost_speed'] = 0.05  # FLOAT [0,1] energy cost of speed as a factor of speed #before 0.025
+    settings['initial_energy'] = 2  # Energy that each organism starts with in each simulation
 
     
     Iterations = 2000
