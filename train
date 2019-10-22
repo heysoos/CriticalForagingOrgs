@@ -25,7 +25,7 @@ def create_settings():
     settings['BoidOn'] = False  # Only use Boid model? #True
     
     # SIMULATION SETTINGS
-    settings['TimeSteps'] = 2000  # number of timesteps per iteration #2000
+    settings['TimeSteps'] = 3  # number of timesteps per iteration #2000
 
     # number of system-wide spin updates per unit of time  (multiplies computation time)
     settings['thermalTime'] = 3

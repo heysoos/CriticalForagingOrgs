@@ -915,6 +915,8 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
             fitm = None
             fitC = None
             if  settings['energy_model']:
+                for I in isings:
+                    I.avg_energy = np.median(I.energies)  # Average or median better?
                 eat_rate = np.average([I.avg_energy for I in isings])
             if settings['mutateB']:
                 print('\n', count, '|', 'avg_Fitness', eat_rate, 'mean_Beta', mBeta,
@@ -940,10 +942,7 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
             Evolution via GA! According to evolution rate done every nth iteration
             Does every evolution event represent one generation?
             '''
-            if settings['energy_model']:
-                # Calculate average / median energy
-                for I in isings:
-                    I.avg_energy = np.median(I.energies)  # Average or median better?
+
             isings = evolve(settings, isings, rep)
 
 def CriticalLearning(isings, foods, settings, Iterations=1):
