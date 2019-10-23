@@ -212,11 +212,14 @@ class ising:
             self.r = settings['r_max']
 
         if settings['energy_model']:
-            #Energy cost for speed, if no energy then minimal speed (only if organism wants to go faster than minimal speed)
-            if self.energy <= 0 and self.v > settings['v_min']:
-                self.v = settings['v_min']
-            else:
+
+
+            if self.energy >= (self.v * settings['cost_speed']) and self.v > settings['v_min']:
+                #if agend has enough energy and wants to go faster than min speed
                 self.energy -= self.v * settings['cost_speed']
+            elif self.v > settings['v_min']:
+                #if agned wants to go faster than min speed but does not have energy
+                self.v = settings['v_min']
 
         # print('Velocity: ' + str(self.v) +  str(self.s[-1]))
 

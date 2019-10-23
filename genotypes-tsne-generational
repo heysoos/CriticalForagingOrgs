@@ -12,7 +12,7 @@ from os import path, makedirs
 # beta-1/sim-20180511-163319
 # beta-10/sim-20180512-105824
 # beta-0-1/sim-20180512-105719
-loadfile = 'sim-20191017-015956'
+loadfile = 'sim-20191022-235903_server'
 # iter_list = [0, 25, 50, 75, 200, 500, 1000]
 #iter_list = np.arange(0, 482, 2)
 iter_list=np.arange(0,50)
@@ -237,9 +237,12 @@ else:
                        color=np.tile(c, (len(x1), 1)), alpha=alpha,
                        s=np.exp(10.5 * fitness[i:j] / np.max(fitness)) / 100)
         else:
+            max_fit = np.max(fitness)
+            if max_fit == 0.0:
+                max_fit = 0.05
             ax.scatter(x1, y1, label=label,
                        color=np.tile(c, (len(x1), 1)), alpha=alpha,
-                       s=np.exp(10.5 * fitness[i:j] / np.max(fitness)) / 25)
+                       s=np.exp(10.5 * fitness[i:j] / max_fit) / 25)
             # s=markersize[markerrank[i:j]-1])
 
 
