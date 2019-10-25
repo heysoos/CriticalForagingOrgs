@@ -259,7 +259,11 @@ class ising:
         if i is None:
             i = np.random.randint(self.size)
         eDiff = 2 * self.s[i] * (self.h[i] + np.dot(self.J[i, :] + self.J[:, i], self.s))
-        if self.Beta * eDiff < np.log(1.0 / np.random.rand() - 1):  # Glauber
+        #deltaE = E_f - E_i = -2 E_i = -2 * - SUM{J_ij*s_i*s_j}
+        #self.J[i, :] + self.J[:, i] are added because value in one of both halfs of J seperated by the diagonal is zero
+
+        if self.Beta * eDiff < np.log(1.0 / np.random.rand() - 1):
+            #transformed  P = 1/(1+e^(deltaE* Beta)
             self.s[i] = -self.s[i]
     '''
     # Execute step of the Glauber algorithm to update the state of one unit
@@ -322,6 +326,7 @@ class ising:
         # update all other neurons a bunch of times
         for j in range(thermalTime):
             perms = np.random.permutation(range(self.Ssize, self.size))
+            #going through all neuron exceot sensors in random permutations
             for i in perms:
                 self.GlauberStep(i)
 
