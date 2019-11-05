@@ -6,16 +6,19 @@ import matplotlib
 import pickle
 from sklearn import manifold
 from os import makedirs, path
+import os
 
 # beta-1/sim-20180511-163319
 # beta-10/sim-20180512-105824
 # beta-0-1/sim-20180512-105719
 # loadfile = 'beta_experiment/beta-0-1/sim-20180512-105719'
-loadfile = 'sim-20191017-015956'
+os.chdir('D:\Jan\Dokumente\studium\Bioinfo\Masterarbeit_ausgelagert')
+loadfile = 'sim-20191023-151526_server_2000'
 # iter = 2000
-iter_list = np.arange(0, 50, 1)
+iter_list = np.arange(0, 2000, 1)
 numAgents = 150
 saveFigBool = True
+energy_model = True
 
 def upper_tri_masking(A):
     m = A.shape[0]
@@ -46,8 +49,12 @@ for ii, iter in enumerate(iter_list):
     isings = pickle.load(open(filename, 'rb'))
 
     food = []
-    for i, I in enumerate(isings):
-        food.append(I.fitness)
+    if energy_model:
+        for i, I in enumerate(isings):
+            food.append(I.energy)
+    else:
+        for i, I in enumerate(isings):
+            food.append(I.fitness)
     # food = np.divide(food, 6)
     FOOD[ii, :] = food
 

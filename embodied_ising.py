@@ -888,6 +888,9 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
             os.makedirs(folder + 'isings')
             os.makedirs(folder + 'stats')
             os.makedirs(folder + 'figs')
+
+            #save settings dicitionary
+            save_settings(folder, settings)
     else:
         folder = None
 
@@ -896,6 +899,7 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
         ''' 
         !!! jede Iteration
         '''
+
         TimeEvolve(isings, foods, settings, folder, rep)
         if settings['plot'] == True:
             plt.clf()
@@ -1236,7 +1240,15 @@ def evolve(settings, I_old, gen):
 
     return I_new
 
+def save_settings(folder, settings):
+    with open(folder + 'settings.csv', 'w') as f:
+        for key in settings.keys():
+            f.write("%s,%s\n" % (key, settings[key]))
+
+
+
 def save_sim(folder, isings, fitness_stat, mutationrate, fitC, fitm, gen):
+
 
     filenameI = folder + 'isings/gen[' + str(gen) + ']-isings.pickle'
     filenameS = folder + 'stats/gen[' + str(gen) + ']-stats.pickle'
@@ -1247,7 +1259,6 @@ def save_sim(folder, isings, fitness_stat, mutationrate, fitC, fitm, gen):
     else:
         mutationh = None
         mutationJ = None
-
 
     pickle_out = open(filenameI, 'wb')
     pickle.dump(isings, pickle_out)

@@ -4,6 +4,7 @@ from embodied_ising import ising
 from embodied_ising import food
 from embodied_ising import CriticalLearning, EvolutionLearning
 import numpy as np
+import argparse
 import matplotlib.pyplot as plt
 from sys import argv
 
@@ -12,6 +13,8 @@ import pickle
 
 
 def create_settings():
+
+    args = parse()
     # --- CONSTANTS ----------------------------------------------------------------+
     settings = {}
     
@@ -25,7 +28,7 @@ def create_settings():
     settings['BoidOn'] = False  # Only use Boid model? #True
     
     # SIMULATION SETTINGS
-    settings['TimeSteps'] = 2000  # number of timesteps per iteration #2000
+    settings['TimeSteps'] = args.time_steps # number of timesteps per iteration #2000
 
     # number of system-wide spin updates per unit of time  (multiplies computation time)
     settings['thermalTime'] = 3
@@ -44,8 +47,8 @@ def create_settings():
     settings['y_min'] = 0.0  # arena southern border
     settings['y_max'] = 8.0  # arena northern border
     
-    settings['save_data'] = True
-    settings['plot'] = False # make plots?
+    settings['save_data'] = args.save_data
+    settings['plot'] = args.plot # make plots?
     settings['plot_n_last_generations'] = 1  # switches on plotting for n last generations
     # iterations. Also begins saving figures after this many iterations if 'plot' setting is 'False'
     settings['plotLive'] = False  # live updates of figures
@@ -83,17 +86,34 @@ def create_settings():
     settings['initial_energy'] = 0  # Energy that each organism starts with in each simulation
 
     
-    Iterations = 2000
+    Iterations = args.iterations
 
 
 
 
     return settings, Iterations
 
+def parse():
+    parser = argparse.ArgumentParser(description=
+                                     '''Agent-based simulation of artificial organisms 
+                                     controlled by a statistical neural net (ising model)''')
+    parser.add_argument('-s', '--save', dest='save_data', action='store_true', help = "Save data of simulation")
+    parser.add_argument('-p', '--plot', dest='plot', action='store_true',
+                        help="Plot simulation data, drastically increases runtime")
+    parser.add_argument('-i', '--iterations', type=int, dest = 'iterations',
+                        help='Number of Iterations in simulation')
+    parser.add_argument('-t', '--timesteps', type=int, dest = 'time_steps',
+                        help='Number of Iterations in simulation')
+    parser.set_defaults(save_data=False, plot=False, iterations=2000, time_steps=2000)
+    args = parser.parse_args()
+    return args
 
 # --- MAIN ---------------------------------------------------------------------+
 
 def run(settings):
+
+
+
     size = settings['size']
     nSensors = settings['nSensors']
     nMotors = settings['nMotors']
@@ -106,10 +126,10 @@ def run(settings):
     foods = []
     for i in range(0, settings['food_num']):
         foods.append(food(settings))
-    '''
-    Food is only created uniformly distributed at the very beginning. 
-    For a new iteration the placement of the food is kept.
-    '''
+
+    # Food is only created uniformly distributed at the very beginning.
+    # For a new iteration the placement of the food is kept.
+
 
     # --- POPULATE THE ENVIRONMENT WITH ORGANISMS ----------+
     if settings['LoadIsings']:

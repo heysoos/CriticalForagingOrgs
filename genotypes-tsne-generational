@@ -8,14 +8,18 @@ from scipy.special import comb
 import pickle
 from sklearn import manifold
 from os import path, makedirs
+import os
 
 # beta-1/sim-20180511-163319
 # beta-10/sim-20180512-105824
 # beta-0-1/sim-20180512-105719
-loadfile = 'sim-20191022-235903_server'
+
+path = ''   #Path to save folder
+os.chdir(path)
+loadfile = 'sim-20191023-151526_server_500'
 # iter_list = [0, 25, 50, 75, 200, 500, 1000]
 #iter_list = np.arange(0, 482, 2)
-iter_list=np.arange(0,50)
+iter_list=np.arange(0,490)
 # iter_list = np.arange(0, 2000, 6)
 numAgents = 150
 numNeurons = 10
