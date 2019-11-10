@@ -67,6 +67,7 @@ class ising:
         # self.r = uniform(0, 360)  # orientation   [0, 360]
         # self.v = uniform(0, settings['v_max']/3)  # velocity      [0, v_max]
         # self.dv = uniform(-settings['dv_max'], settings['dv_max'])  # dv
+        self.v = 0.0
 
         self.dx = 0
         self.dy = 0

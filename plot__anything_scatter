@@ -14,6 +14,7 @@ import os
 # loadfile = 'beta_experiment/beta-0-1/sim-20180512-105719'
 #os.chdir('D:\Jan\Dokumente\studium\Bioinfo\Masterarbeit_ausgelagert')
 loadfile = 'sim-20191023-151526_server_2000new'
+plot_var = 'v' #variable of ising object to plot, write as string
 # iter = 2000
 iter_list = np.arange(0, 2000, 1)
 numAgents = 150
@@ -49,12 +50,11 @@ for ii, iter in enumerate(iter_list):
     isings = pickle.load(open(filename, 'rb'))
 
     food = []
-    if energy_model:
-        for i, I in enumerate(isings):
-            food.append(I.energy)
-    else:
-        for i, I in enumerate(isings):
-            food.append(I.fitness)
+
+    for i, I in enumerate(isings):
+        exec('to_plot = I.' + plot_var)
+        food.append(to_plot)
+
     # food = np.divide(food, 6)
     FOOD[ii, :] = food
 
@@ -66,7 +66,7 @@ plt.rc('legend', **{'fontsize': 20})
 
 fig, ax = plt.subplots(1, 1, figsize=(19, 10))
 fig.text(0.51, 0.035, r'$Generation$', ha='center', fontsize=20)
-fig.text(0.07, 0.5, r'$Food Consumed$', va='center', rotation='vertical', fontsize=20)
+fig.text(0.07, 0.5, plot_var, va='center', rotation='vertical', fontsize=20)
 title = 'Food consumed per organism'
 fig.suptitle(title)
 
@@ -89,8 +89,8 @@ for i in range(0, numAgents):
 #                 )
 
 
-yticks = np.arange(0, 100, 20)
-ax.set_yticks(yticks)
+#yticks = np.arange(0, 100, 20)
+#ax.set_yticks(yticks)
 
 
 # xticks = [0.1, 0.5, 1, 2, 4, 10, 50, 100, 200, 500, 1000, 2000]
@@ -99,13 +99,13 @@ ax.set_yticks(yticks)
 # ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
 
 
-savefolder = folder + '/figs/fitness/'
+savefolder = folder + '/figs/' + plot_var + '/'
 savefilename = savefolder + 'fitness_gen_' + str(iter_list[0]) + '-' + str(iter_list[-1]) + '.png'
 if not path.exists(savefolder):
     makedirs(savefolder)
 
 if saveFigBool:
-    plt.savefig(savefilename, bbox_inches='tight', dpi=150)
+    plt.savefig(savefilename, bbox_inches='tight', dpi=300)
     # plt.close()
 
     savemsg = 'Saving ' + savefilename

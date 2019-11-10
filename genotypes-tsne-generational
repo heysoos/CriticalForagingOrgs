@@ -9,17 +9,18 @@ import pickle
 from sklearn import manifold
 from os import path, makedirs
 import os
+import time
 
 # beta-1/sim-20180511-163319
 # beta-10/sim-20180512-105824
 # beta-0-1/sim-20180512-105719
 
-path = ''   #Path to save folder
-os.chdir(path)
-loadfile = 'sim-20191023-151526_server_500'
+
+#os.chdir('D:\Jan\Dokumente\studium\Bioinfo\Masterarbeit_ausgelagert')
+loadfile = 'sim-20191023-151526_server_2000new'
 # iter_list = [0, 25, 50, 75, 200, 500, 1000]
 #iter_list = np.arange(0, 482, 2)
-iter_list=np.arange(0,490)
+iter_list=np.arange(0,2000)
 # iter_list = np.arange(0, 2000, 6)
 numAgents = 150
 numNeurons = 10
@@ -286,7 +287,7 @@ if not path.exists(folder2):
     makedirs(folder2)
 
 if saveFigBool:
-    plt.savefig(savefilename, bbox_inches='tight', dpi=150)
+    plt.savefig(savefilename, bbox_inches='tight', dpi=2000)
     # plt.close()
 
     savemsg = 'Saving ' + savefilename
