@@ -99,7 +99,7 @@ def parse():
                                      controlled by a statistical neural net (ising model)''')
     parser.add_argument('-s', '--save', dest='save_data', action='store_true', help = "Save data of simulation")
     parser.add_argument('-p', '--plot', dest='plot', action='store_true',
-                        help="Plot simulation data, drastically increases runtime")
+                        help="Plot simulation data, drastically decreases runtime")
     parser.add_argument('-i', '--iterations', type=int, dest = 'iterations',
                         help='Number of Iterations in simulation')
     parser.add_argument('-t', '--timesteps', type=int, dest = 'time_steps',

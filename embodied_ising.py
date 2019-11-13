@@ -109,8 +109,12 @@ class ising:
         self.org_sens = 0 # directional, 1/distance ** 2 weighted organism sensor
         self.fitness = 0
         self.energy = 0.0
+        self.food = 0
         self.energies = []
         self.avg_energy = 0
+        self.all_velocity = 0
+        self.avg_velocity = 0
+
 
         self.assign_critical_values(settings)
 
@@ -221,6 +225,7 @@ class ising:
             elif self.v > settings['v_min']:
                 #if agned wants to go faster than min speed but does not have energy
                 self.v = settings['v_min']
+            self.all_velocity += self.v
 
         # print('Velocity: ' + str(self.v) +  str(self.s[-1]))
 
@@ -902,6 +907,11 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
         '''
 
         TimeEvolve(isings, foods, settings, folder, rep)
+        if settings['energy_model']:
+            for I in isings:
+                I.avg_energy = np.median(I.energies)  # Average or median better?
+                I.avg_food = I.all_food / settings['TimeSteps'] 
+
         if settings['plot'] == True:
             plt.clf()
 
@@ -927,9 +937,7 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
             mutationrate = None
             fitm = None
             fitC = None
-            if  settings['energy_model']:
-                for I in isings:
-                    I.avg_energy = np.median(I.energies)  # Average or median better?
+
                 eat_rate = np.average([I.avg_energy for I in isings])
             if settings['mutateB']:
                 print('\n', count, '|', 'avg_Fitness', eat_rate, 'mean_Beta', mBeta,
@@ -1379,6 +1387,7 @@ def interact(settings, isings, foods):
             if food_org_dist <= settings['org_radius']:
                 if settings['energy_model']:
                     I.energy += food.energy
+                    I.food += food.energy
                 else:
                     I.fitness += food.energy
                 '''
