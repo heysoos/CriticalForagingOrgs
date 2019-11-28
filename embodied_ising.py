@@ -908,9 +908,11 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
 
         TimeEvolve(isings, foods, settings, folder, rep)
         if settings['energy_model']:
+
             for I in isings:
                 I.avg_energy = np.median(I.energies)  # Average or median better?
-                I.avg_food = I.all_food / settings['TimeSteps'] 
+                I.avg_velocity = I.all_velocity / settings['TimeSteps']
+            eat_rate = np.average([I.avg_energy for I in isings])
 
         if settings['plot'] == True:
             plt.clf()
@@ -938,7 +940,7 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
             fitm = None
             fitC = None
 
-                eat_rate = np.average([I.avg_energy for I in isings])
+
             if settings['mutateB']:
                 print('\n', count, '|', 'avg_Fitness', eat_rate, 'mean_Beta', mBeta,
                       'std_Beta', stdBeta, 'min_Beta', minBeta, 'max_Beta', maxBeta)

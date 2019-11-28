@@ -12,8 +12,8 @@ import os
 # beta-10/sim-20180512-105824
 # beta-0-1/sim-20180512-105719
 # loadfile = 'beta_experiment/beta-0-1/sim-20180512-105719'
-#os.chdir('D:\Jan\Dokumente\studium\Bioinfo\Masterarbeit_ausgelagert')
-loadfile = 'sim-20191023-151526_server_2000new'
+os.chdir('D:\Masterarbeit_ausgelagert')
+loadfile = 'sim-20191114-000009_server'
 plot_var = 'v' #variable of ising object to plot, write as string
 # iter = 2000
 iter_list = np.arange(0, 2000, 1)

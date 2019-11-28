@@ -73,7 +73,7 @@ def create_settings():
     settings['iter'] = '482'
     
     #Seasons
-    settings['seasons'] = True #BOO; Activates seasons
+    settings['seasons'] = False #BOO; Activates seasons
     settings['years_per_iteration'] = 1 #INT amount of seasonal changes per iteration
     settings['min_food_winter'] = 0.5 #FLOAT [0,1]; relative decimation of food in winter
     

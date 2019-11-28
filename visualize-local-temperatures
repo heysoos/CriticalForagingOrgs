@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 from os import path, makedirs
+import os
 
 # beta-1/sim-20180511-163319
 # beta-10/sim-20180512-105824
@@ -12,7 +13,8 @@ from os import path, makedirs
 # loadfiles = ['beta_experiment/beta-1/sim-20180511-163319',
 #              'beta_experiment/beta-10/sim-20180512-105824',
 #              'beta_experiment/beta-0-1/sim-20180512-105719']
-loadfiles = ['sim-20191023-151526_server_2000new']
+loadfiles = ['sim-20191114-000009_server']
+os.chdir('D:\Masterarbeit_ausgelagert')
 
 for loadfile in loadfiles:
     iter_list = np.arange(0, 2000, 1)

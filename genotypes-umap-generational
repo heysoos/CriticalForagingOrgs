@@ -8,6 +8,10 @@ from scipy.special import comb
 import pickle
 from sklearn import manifold
 from os import path, makedirs
+
+import umap
+from sklearn.datasets import load_digits
+
 import os
 import time
 
@@ -151,12 +155,12 @@ folder = 'save/' + loadfile
 folder2 = folder + '/figs/J_tsne_source/'
 
 if transposeJ:
-    fname2 = folder2 + 'J_tsne-T_gen-' + \
+    fname2 = folder2 + 'U_map-T_gen-' + \
              str(iter_list[0]) + '-' + str(iter_list[1] - iter_list[0]) + '-' + str(iter_list[-1]) + \
              '_perp-' + str(perplexity) + '_n_iter-' + str(n_iter) + \
              '.npz'
 else:
-    fname2 = folder2 + 'J_tsne_gen-' + \
+    fname2 = folder2 + 'U_map_gen-' + \
              str(iter_list[0]) + '-' + str(iter_list[1] - iter_list[0]) + '-' + str(iter_list[-1]) + \
              '_perp-' + str(perplexity) + '_n_iter-' + str(n_iter) + \
              '.npz'
@@ -190,14 +194,14 @@ else:
 
     if not loadFit:
         #  ----------------------------------------------------------------------
-        print("Computing t-SNE embedding")
-        tsne = manifold.TSNE(n_components=2, init='pca',
-                             random_state=0, perplexity=perplexity, n_iter=n_iter)
-
+        print("Computing u-map embedding")
+        #tsne = manifold.TSNE(n_components=2, init='pca',
+        #                     random_state=0, perplexity=perplexity, n_iter=n_iter)
+        embedding = umap.UMAP()
         if transposeJ: # model NN edges as 'agent' instead of organisms.
-            J_tsne = tsne.fit_transform(np.transpose(J))
+            J_tsne = embedding.fit_transform(J.transpose())
         else:
-            J_tsne = tsne.fit_transform(J)
+            J_tsne = embedding.fit_transform(J)
 
         if not path.exists(folder2):
             makedirs(folder2)
