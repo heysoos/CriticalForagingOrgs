@@ -20,7 +20,7 @@ os.chdir('D:\Masterarbeit_ausgelagert')
 loadfile = 'sim-20191114-000009_server'
 # iter_list = [0, 25, 50, 75, 200, 500, 1000]
 #iter_list = np.arange(0, 482, 2)
-iter_list=np.arange(0,2000)
+iter_list=np.arange(0,200)
 # iter_list = np.arange(0, 2000, 6)
 numAgents = 150
 numNeurons = 10
@@ -107,7 +107,8 @@ def load_J_fitness_from_isings(loadfile, iter_list, numAgents, numNeurons):
 
         for I in isings:
             J[orgNum, :] = upper_tri_masking(I.J)
-            fitness[orgNum] = I.fitness
+            #fitness[orgNum] = I.fitness
+            exec('fitness[orgNum] = I.%s' % size_par)
             orgNum += 1  # this counter iterates for both loops!
 
         # if iter == 2000:  # this iteration double counted fitness by accident!

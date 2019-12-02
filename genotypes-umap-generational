@@ -111,7 +111,8 @@ def load_J_fitness_from_isings(loadfile, iter_list, numAgents, numNeurons):
 
         for I in isings:
             J[orgNum, :] = upper_tri_masking(I.J)
-            fitness[orgNum] = I.fitness
+            #fitness[orgNum] = I.fitness
+            exec('fitness[orgNum] = I.%s' % size_par)
             orgNum += 1  # this counter iterates for both loops!
 
         # if iter == 2000:  # this iteration double counted fitness by accident!
@@ -152,7 +153,7 @@ folder = 'save/' + loadfile
 #         str(iter_list[0]) + '-' + str(iter_list[1] - iter_list[0]) + '-' + str(iter_list[-1]) + \
 #         '.png'
 
-folder2 = folder + '/figs/J_tsne_source/'
+folder2 = folder + '/figs/J_umap_source/'
 
 if transposeJ:
     fname2 = folder2 + 'U_map-T_gen-' + \
@@ -197,7 +198,7 @@ else:
         print("Computing u-map embedding")
         #tsne = manifold.TSNE(n_components=2, init='pca',
         #                     random_state=0, perplexity=perplexity, n_iter=n_iter)
-        embedding = umap.UMAP()
+        embedding = umap.UMAP(n_components=2)
         if transposeJ: # model NN edges as 'agent' instead of organisms.
             J_tsne = embedding.fit_transform(J.transpose())
         else:
