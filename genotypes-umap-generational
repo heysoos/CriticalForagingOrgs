@@ -22,6 +22,8 @@ import time
 
 os.chdir('D:\Masterarbeit_ausgelagert')
 loadfile = 'sim-20191114-000009_server'
+
+
 # iter_list = [0, 25, 50, 75, 200, 500, 1000]
 #iter_list = np.arange(0, 482, 2)
 iter_list=np.arange(0,2000)
@@ -267,7 +269,7 @@ else:
 # plt.rc('font', **font)
 # plt.rc('legend', **{'fontsize': 20})
 
-titlestr = 'Connectivity t-SNE Projections'
+titlestr = 'Connectivity u-map Projections'
 plt.title(titlestr)
 # xlblstr = 'Perplexity: ' + str(perplexity)
 # plt.xlabel(xlblstr)

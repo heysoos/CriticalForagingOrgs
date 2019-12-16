@@ -18,9 +18,11 @@ import time
 
 os.chdir('D:\Masterarbeit_ausgelagert')
 loadfile = 'sim-20191114-000009_server'
+#loadfile = 'sim-20191023-151526_server_2000new'
+
 # iter_list = [0, 25, 50, 75, 200, 500, 1000]
 #iter_list = np.arange(0, 482, 2)
-iter_list=np.arange(0,200)
+iter_list=np.arange(0,2000, 10)
 # iter_list = np.arange(0, 2000, 6)
 numAgents = 150
 numNeurons = 10
@@ -75,6 +77,7 @@ def load_J_from_isings(loadfile, iter_list, numAgents, numNeurons):
     iter_label = []
 
     orgNum = 0
+
     for iter in iter_list:
         filename = 'save/' + loadfile + '/isings/gen[' + str(iter) + ']-isings.pickle'
 
@@ -88,6 +91,7 @@ def load_J_from_isings(loadfile, iter_list, numAgents, numNeurons):
             J[orgNum, :] = upper_tri_masking(I.J)
             orgNum += 1  # this counter iterates for both loops!
 
+
     return J
 
 def load_J_fitness_from_isings(loadfile, iter_list, numAgents, numNeurons):
@@ -96,6 +100,7 @@ def load_J_fitness_from_isings(loadfile, iter_list, numAgents, numNeurons):
     iter_label = []
 
     orgNum = 0
+    start_time = time.time()
     for iter in iter_list:
         filename = 'save/' + loadfile + '/isings/gen[' + str(iter) + ']-isings.pickle'
 
@@ -115,7 +120,8 @@ def load_J_fitness_from_isings(loadfile, iter_list, numAgents, numNeurons):
         #     for iOrg, I in enumerate(isings):
         #         print('Correcting for generation 2000 double counting.')
         #         fitness[(orgNum - 50 + iOrg)] -= fitness[orgNum - 100 + iOrg]
-
+    end_time = time.time()
+    print('Time:', end_time - start_time)
     return J, fitness
 
 def load_fitness_from_isings(loadfile, iter_list, numAgents):

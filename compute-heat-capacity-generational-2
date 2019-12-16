@@ -15,12 +15,12 @@ if len(argv) < 3:
     # loadfile = 'sim-20180131-145412'
     # bind = 0
     # iterNum = 0
-loadfile = str(argv[1])
-bind = int(argv[2])
-iterNum = int(argv[3])
+loadfile = str(argv[1]) #
+bind = int(argv[2]) #beta index
+iterNum = int(argv[3]) #Generation numbers
 
 
-R = 10
+R = 1 # Number of Repetitions
 mode = 'MonteCarlo'
 
 Nbetas = 101
@@ -34,7 +34,7 @@ size = isings[0].size # get size from first agent
 numAgents = len(isings)
 
 C = np.zeros((R, numAgents))
-
+# tqdm(range(R))
 for rep in range(R):
     # filename = 'files/mode_' + mode + '-size_' + \
     #            str(size) + '-ind_' + str(rep) + '.npz'
@@ -49,7 +49,7 @@ for rep in range(R):
     for I in isings:
         Em = 0
         E2m = 0
-        T = 100000
+        T = 10000 #TimeSteps in dream simulation T = 100000
 
         betaVec = betas * I.Beta  # scale by org's local temperature
         # print(agentNum)
