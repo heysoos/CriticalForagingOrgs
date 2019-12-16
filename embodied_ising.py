@@ -954,7 +954,7 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
                     I.energies = []
             save_sim(folder, isings_copy, fitness_stat, mutationrate, fitC, fitm, rep)
 
-        if rep > (Iterations - settings['plot_n_last_generations']):
+        if rep > (Iterations - settings['plot_n_last_generations'] + 1):
             settings['plot'] = True
 
         count += 1
