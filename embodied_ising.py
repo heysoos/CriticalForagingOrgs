@@ -605,9 +605,9 @@ def TimeEvolve(isings, foods, settings, folder, rep):
         # PLOT SIMULATION FRAME
         if settings['plot'] == True and (t % settings['frameRate']) == 0:
             plot_frame(settings, folder, fig, ax, isings, foods, t, rep)
-            plt.pause(1e-5)
-            plt.draw()
-            plt.cla()
+
+            #set_path
+            #set_data
         
         '''
         can optimize interact with matrix calculations instead of loops
@@ -1085,7 +1085,14 @@ def plot_frame(settings, folder, fig, ax, isings, foods, time, rep):
     if settings['save_data'] == True:
         filename = folder + 'figs/iter-' + str(rep) + 'time-' + str(time).zfill(4) + '.png'
         plt.savefig(filename, dpi=300)
-    # plt.close()
+        #plt.close()
+    #ax.plot()
+    plt.pause(1e-5)
+    #plt.draw()
+    plt.cla()
+    #plt.clf()
+    #frame.close()
+
 
 def calc_fit(isings, mutationrate, fitness_stat, count):
     fitC = []
