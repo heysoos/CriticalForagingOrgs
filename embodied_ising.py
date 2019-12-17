@@ -1,6 +1,6 @@
-from plotting import plot_food
-from plotting import plot_organism
 
+
+import plotting
 import numpy as np
 import operator
 from itertools import combinations
@@ -1065,12 +1065,13 @@ def plot_frame(settings, folder, fig, ax, isings, foods, time, rep):
               settings['y_max'] + pad])
 
     # PLOT ORGANISMS
-    for I in isings:
-        plot_organism(settings, I.xpos, I.ypos, I.r, ax)
 
-    # PLOT FOOD PARTICLES
-    for food in foods:
-        plot_food(settings, food.xpos, food.ypos, ax)
+    plotting.initial_plot(isings, foods, settings, ax)
+
+
+
+
+    #line, = ax.plot(0,0)
 
     # MISC PLOT SETTINGS
     ax.set_aspect('equal')
