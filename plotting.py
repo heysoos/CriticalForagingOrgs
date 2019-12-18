@@ -8,6 +8,7 @@ from math import cos
 from math import radians
 
 plt.rcParams['animation.ffmpeg_path'] = "D:\\Program Files\\ffmpeg-20191217-bd83191-win64-static\\bin\\ffmpeg.exe"
+#plt.rcParams["figure.figsize"] = [8,8]
 
 #--- FUNCTIONS ----------------------------------------------------------------+
 
@@ -23,12 +24,13 @@ def animate_plot(isings_all_timesteps, foods_all_timesteps, settings, ax, fig):
 
 
     initial_plot(isings_all_timesteps[0], foods_all_timesteps[0], settings, ax)
-    ani = animation.FuncAnimation(fig, __update_plot, fargs=[isings_all_timesteps, foods_all_timesteps, settings, ax], interval=1, frames = len(isings_all_timesteps))
+    plt.savefig('firstframe.png', dpi =100, bbox_inches = 'tight')
+    ani = animation.FuncAnimation(fig, __update_plot, fargs=[isings_all_timesteps, foods_all_timesteps, settings, ax], interval=1, frames=len(isings_all_timesteps))
     #Writer = animation.FFMpegWriter
     Writer = animation.FFMpegFileWriter
     writer = Writer(fps=1, metadata=dict(artist='Me'), bitrate=1800)
     ani.save('lines.mp4', writer=writer)
-    plt.show()
+    #plt.show()
 
 
 def __update_plot(t, isings_all_timesteps, foods_all_timesteps, settings, ax):
