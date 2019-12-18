@@ -590,6 +590,9 @@ def TimeEvolve(isings, foods, settings, folder, rep):
         # plt.ion()
         fig, ax = plt.subplots()
         # fig.set_size_inches(15, 10)
+        isings_all_timesteps = []
+        foods_all_timesteps = []
+        frames = 0
 
     '''
     !!! iterating through timesteps
@@ -604,7 +607,11 @@ def TimeEvolve(isings, foods, settings, folder, rep):
 
         # PLOT SIMULATION FRAME
         if settings['plot'] == True and (t % settings['frameRate']) == 0:
-            plot_frame(settings, folder, fig, ax, isings, foods, t, rep)
+            #plot_frame(settings, folder, fig, ax, isings, foods, t, rep)
+            isings_all_timesteps.append(isings)
+            foods_all_timesteps.append(foods)
+            frames += 1
+
 
             #set_path
             #set_data
@@ -642,15 +649,17 @@ def TimeEvolve(isings, foods, settings, folder, rep):
                 
             
             
-            
-            '''
-            for I in isings:
-                if settings['ANN']:
-                    I.ANNUpdate(settings)
-                else:
-                    I.SequentialGlauberStep(settings)
-                I.position[:, t] = [I.xpos, I.ypos]
-            '''
+    if settings['plot']:
+        plotting.animate_plot(isings_all_timesteps, foods_all_timesteps, settings, ax, fig)
+
+        '''
+        for I in isings:
+            if settings['ANN']:
+                I.ANNUpdate(settings)
+            else:
+                I.SequentialGlauberStep(settings)
+            I.position[:, t] = [I.xpos, I.ypos]
+        '''
 '''
 #Helper functions parallelization
 def parallelSequGlauberStep(I, settings):
@@ -1065,8 +1074,11 @@ def plot_frame(settings, folder, fig, ax, isings, foods, time, rep):
               settings['y_max'] + pad])
 
     # PLOT ORGANISMS
-
+    #if time == 0:
     plotting.initial_plot(isings, foods, settings, ax)
+    # else:
+    #     plt.animation.FuncAnimation(fig, func=plotting.update_plot(isings, foods, settings, ax), )
+    #     pass
 
 
 
