@@ -34,12 +34,13 @@ def animate_plot(isings_all_timesteps, foods_all_timesteps, settings, ax, fig):
 
 
 def __update_plot(t, isings_all_timesteps, foods_all_timesteps, settings, ax):
-    [a.remove for a in reversed(ax.artists)]
+    #[a.remove for a in reversed(ax.artists)]
+    plt.cla
     isings = isings_all_timesteps[t]
     foods = foods_all_timesteps[t]
     initial_plot(isings, foods, settings, ax)
 
-    return ax
+    return ax.artists
 
 
 
