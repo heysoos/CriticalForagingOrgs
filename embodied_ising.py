@@ -586,12 +586,13 @@ def TimeEvolve(isings, foods, settings, folder, rep):
 
     # Main simulation loop:
     if settings['plot'] == True:
-        plt.clf()
+        #plt.clf()
         # plt.ion()
         fig, ax = plt.subplots()
         #fig.set_size_inches(15, 10)
-        isings_all_timesteps = []
-        foods_all_timesteps = []
+        #isings_all_timesteps = []
+        #foods_all_timesteps = []
+        artists_all_TS = []
 
 
     '''
@@ -607,9 +608,14 @@ def TimeEvolve(isings, foods, settings, folder, rep):
 
         # PLOT SIMULATION FRAME
         if settings['plot'] == True and (t % settings['frameRate']) == 0:
-            plot_frame(settings, folder, fig, ax, isings, foods, t, rep)
-            isings_all_timesteps.append(isings)
-            foods_all_timesteps.append(foods)
+            #plot_frame(settings, folder, fig, ax, isings, foods, t, rep)
+            #isings_all_timesteps.append(isings)
+            #foods_all_timesteps.append(foods)
+            plotting.design_figure(settings, fig, ax)
+            plotting.initial_plot(isings, foods, settings, ax)
+
+            artists_all_TS.append(ax.artists)
+            ax.cla()
 
 
 
@@ -650,7 +656,7 @@ def TimeEvolve(isings, foods, settings, folder, rep):
             
             
     if settings['plot']:
-        plotting.animate_plot(isings_all_timesteps, foods_all_timesteps, settings, ax, fig)
+        plotting.animate_plot(artists_all_TS, settings, ax, fig)
 
         '''
         for I in isings:
@@ -1058,50 +1064,6 @@ def CriticalLearning(isings, foods, settings, Iterations=1):
                 I.fitness = 0
 
 
-def plot_frame(settings, folder, fig, ax, isings, foods, time, rep):
-    # fig, ax = plt.subplots()
-    fig.set_size_inches(9.6, 5.4)
-
-    # plt.xlim([settings['x_min'] + settings['x_min'] * 0.25,
-    #           settings['x_max'] + settings['x_max'] * 0.25])
-    # plt.ylim([settings['y_min'] + settings['y_min'] * 0.25,
-    #           settings['y_max'] + settings['y_max'] * 0.25])
-    pad = 0.5
-
-    plt.xlim([settings['x_min'] - pad,
-              settings['x_max'] + pad])
-    plt.ylim([settings['y_min'] - pad,
-              settings['y_max'] + pad])
-
-    # PLOT ORGANISMS
-
-    #plotting.initial_plot(isings, foods, settings, ax)
-
-
-
-
-    #line, = ax.plot(0,0)
-
-    # MISC PLOT SETTINGS
-    ax.set_aspect('equal')
-    frame = plt.gca()
-    frame.axes.get_xaxis().set_ticks([])
-    frame.axes.get_yaxis().set_ticks([])
-
-    plt.figtext(0.025, 0.90, r'T_STEP: ' + str(time))
-
-    # if settings['plotLive'] == True:
-    #     plt.show()
-    if settings['save_data'] == True:
-        filename = folder + 'figs/iter-' + str(rep) + 'time-' + str(time).zfill(4) + '.png'
-        plt.savefig(filename, dpi=300)
-        #plt.close()
-    #ax.plot()
-    plt.pause(1e-5)
-    #plt.draw()
-    plt.cla()
-    #plt.clf()
-    #frame.close()
 
 
 def calc_fit(isings, mutationrate, fitness_stat, count):

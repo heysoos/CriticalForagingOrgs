@@ -20,7 +20,7 @@ def initial_plot(isings, foods, settings, ax):
     for food in foods:
         __plot_food_init(settings, food.xpos, food.ypos, ax)
 
-def animate_plot(isings_all_timesteps, foods_all_timesteps, settings, ax, fig):
+def animate_plot_Func([isings_all_timesteps, foods_all_timesteps, settings, ax, fig):
 
 
     initial_plot(isings_all_timesteps[0], foods_all_timesteps[0], settings, ax)
@@ -32,6 +32,14 @@ def animate_plot(isings_all_timesteps, foods_all_timesteps, settings, ax, fig):
     ani.save('lines.mp4', writer=writer)
     #plt.show()
 
+def animate_plot(all_artists, settings, ax, fig):
+    #design_figure(settings, fig, ax)
+    #Writer = animation.FFMpegWriter
+    Writer = animation.FFMpegFileWriter
+    writer = Writer(fps=1, metadata=dict(artist='Me'), bitrate=1800)
+    ani = animation.ArtistAnimation(fig, all_artists)
+    ani.save('lines.mp4', writer=writer)
+
 
 def __update_plot(t, isings_all_timesteps, foods_all_timesteps, settings, ax):
     #[a.remove for a in reversed(ax.artists)]
@@ -42,6 +50,84 @@ def __update_plot(t, isings_all_timesteps, foods_all_timesteps, settings, ax):
 
     return ax.artists
 
+def design_figure(settings, fig, ax):
+    # fig, ax = plt.subplots()
+    fig.set_size_inches(9.6, 5.4)
+
+    # plt.xlim([settings['x_min'] + settings['x_min'] * 0.25,
+    #           settings['x_max'] + settings['x_max'] * 0.25])
+    # plt.ylim([settings['y_min'] + settings['y_min'] * 0.25,
+    #           settings['y_max'] + settings['y_max'] * 0.25])
+    pad = 0.5
+
+    plt.xlim([settings['x_min'] - pad,
+              settings['x_max'] + pad])
+    plt.ylim([settings['y_min'] - pad,
+              settings['y_max'] + pad])
+
+
+
+    # MISC PLOT SETTINGS
+    ax.set_aspect('equal')
+    frame = plt.gca()
+    frame.axes.get_xaxis().set_ticks([])
+    frame.axes.get_yaxis().set_ticks([])
+
+    #plt.figtext(0.025, 0.90, r'T_STEP: ' + str(time))
+
+
+
+    #ax.plot()
+    #plt.pause(1e-5)
+    #plt.draw()
+    #plt.cla()
+    #plt.clf()
+    #frame.close()
+
+def plot_frame(settings, folder, fig, ax, isings, foods, time, rep):
+    # fig, ax = plt.subplots()
+    fig.set_size_inches(9.6, 5.4)
+
+    # plt.xlim([settings['x_min'] + settings['x_min'] * 0.25,
+    #           settings['x_max'] + settings['x_max'] * 0.25])
+    # plt.ylim([settings['y_min'] + settings['y_min'] * 0.25,
+    #           settings['y_max'] + settings['y_max'] * 0.25])
+    pad = 0.5
+
+    plt.xlim([settings['x_min'] - pad,
+              settings['x_max'] + pad])
+    plt.ylim([settings['y_min'] - pad,
+              settings['y_max'] + pad])
+
+    # PLOT ORGANISMS
+
+    #plotting.initial_plot(isings, foods, settings, ax)
+
+
+
+
+    #line, = ax.plot(0,0)
+
+    # MISC PLOT SETTINGS
+    ax.set_aspect('equal')
+    frame = plt.gca()
+    frame.axes.get_xaxis().set_ticks([])
+    frame.axes.get_yaxis().set_ticks([])
+
+    plt.figtext(0.025, 0.90, r'T_STEP: ' + str(time))
+
+    # if settings['plotLive'] == True:
+    #     plt.show()
+    if settings['save_data'] == True:
+        filename = folder + 'figs/iter-' + str(rep) + 'time-' + str(time).zfill(4) + '.png'
+        plt.savefig(filename, dpi=300)
+        #plt.close()
+    #ax.plot()
+    plt.pause(1e-5)
+    #plt.draw()
+    plt.cla()
+    #plt.clf()
+    #frame.close()
 
 
 
