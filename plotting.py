@@ -1,3 +1,4 @@
+import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib.patches import Circle
 import matplotlib.lines as lines
@@ -13,13 +14,7 @@ plt.rcParams['animation.ffmpeg_path'] = "D:\\Program Files\\ffmpeg-20191217-bd83
 
 #--- FUNCTIONS ----------------------------------------------------------------+
 
-def initial_plot(isings, foods, settings, ax):
-    for I in isings:
-        __plot_organism_init(settings, I.xpos, I.ypos, I.r, ax)
 
-    # PLOT FOOD PARTICLES
-    for food in foods:
-        __plot_food_init(settings, food.xpos, food.ypos, ax)
 
 def animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, fig):
     savepath = 'save\\{}\\animation-{}.mp4'.format(settings['loadfile'], time.strftime("%Y%m%d-%H%M%S"))
@@ -41,8 +36,12 @@ def animate_plot(all_artists, settings, ax, fig):
     savepath ='save\\{}\\animation-{}.mp4'.format(settings['loadfile'], time.strftime("%Y%m%d-%H%M%S"))
     Writer = animation.FFMpegFileWriter
     writer = Writer(fps=settings['animation_fps'], metadata=dict(artist='Sina Abdollahi, Jan Prosi'), bitrate=1800)
+    #Writer = animation.writers['ffmpeg']
+    #writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
     ani = animation.ArtistAnimation(fig, all_artists)
-    ani.save(savepath, writer=writer, dpi = 100)
+    #ani.save(savepath, writer=writer, dpi = 100)
+    mpl.verbose.set_level("helpful")
+    ani.save(savepath, writer=writer)
     print('Animation successfully saved at {}'.format(savepath))
 
 
@@ -138,8 +137,43 @@ def plot_frame(settings, folder, fig, ax, isings, foods, time, rep):
 
 
 
+def create_artists_append(isings, foods, settings):
+    '''Creates artists and apends the to artist list'''
+    artists_this_gen = []
+    for I in isings:
+        artists_this_gen = __create_artists_organisms(artists_this_gen,settings, I.xpos, I.ypos, I.r)
+    for food in foods:
+        artists_this_gen = __create_food_artist(artists_this_gen, settings, food.xpos, food.ypos)
+    return artists_this_gen
+
+def __create_artists_organisms(artist_list, settings, x1, y1, theta):
+    #Circles
+    artist_list.append(Circle([x1,y1], settings['org_radius'], edgecolor = 'g', facecolor = 'lightgreen', zorder=8))
+    #Edges
+    artist_list.append(Circle([x1,y1], settings['org_radius'], facecolor='None', edgecolor = 'darkgreen', zorder=8))
+    tail_len = settings['org_radius'] * 1.25
+
+    x2 = cos(radians(theta)) * tail_len + x1
+    y2 = sin(radians(theta)) * tail_len + y1
+
+    # Does this work??
+    #artist_list.append(lines.Line2D([x1, x2], [y1, y2], color='darkgreen', linewidth=1, zorder=10))
+    return artist_list
+
+def __create_food_artist(artist_list, settings, x1, y1):
+    artist_list.append(Circle([x1, y1], settings['food_radius'] / 2, edgecolor='darkslateblue', facecolor='mediumslateblue',
+                    zorder=5))
+    return artist_list
 
 
+
+def initial_plot(isings, foods, settings, ax):
+    for I in isings:
+        __plot_organism_init(settings, I.xpos, I.ypos, I.r, ax)
+
+    # PLOT FOOD PARTICLES
+    for food in foods:
+        __plot_food_init(settings, food.xpos, food.ypos, ax)
 
 def __plot_organism_init(settings, x1, y1, theta, ax):
 
@@ -153,6 +187,7 @@ def __plot_organism_init(settings, x1, y1, theta, ax):
     
     x2 = cos(radians(theta)) * tail_len + x1
     y2 = sin(radians(theta)) * tail_len + y1
+
 
     ax.add_line(lines.Line2D([x1,x2],[y1,y2], color='darkgreen', linewidth=1, zorder=10))
 
