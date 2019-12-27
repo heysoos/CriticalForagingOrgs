@@ -593,12 +593,11 @@ def TimeEvolve(isings, foods, settings, folder, rep):
         # plt.ion()
         fig, ax = plt.subplots()
         #fig.set_size_inches(15, 10)
-        #isings_all_timesteps = []
-        #foods_all_timesteps = []
+        isings_all_timesteps = []
+        foods_all_timesteps = []
         #artists_all_TS = np.zeros(T)
-        artist_list = []
-        plotting.design_figure(settings, fig, ax)
-        fig.canvas.draw_idle()
+        #artist_list = []
+
 
 
     '''
@@ -615,11 +614,11 @@ def TimeEvolve(isings, foods, settings, folder, rep):
         # PLOT SIMULATION FRAME
         if settings['plot'] == True and (t % settings['frameRate']) == 0:
             #plot_frame(settings, folder, fig, ax, isings, foods, t, rep)
-            #isings_all_timesteps.append(copy.deepcopy(isings))
-            #foods_all_timesteps.append(copy.deepcopy(foods))
+            isings_all_timesteps.append(copy.deepcopy(isings))
+            foods_all_timesteps.append(copy.deepcopy(foods))
             #plotting.design_figure(settings, fig, ax)
             #plotting.initial_plot(isings, foods, settings, ax)
-            artist_list.append(plotting.create_artists_append(isings, foods, settings))
+            #artist_list.append(plotting.create_artists_append(isings, foods, settings))
 
             #artists_all_TS.append(ax.artists))
             #artists_all_TS[t] = copy.deepcopy(ax.artists)
@@ -665,8 +664,8 @@ def TimeEvolve(isings, foods, settings, folder, rep):
             
             
     if settings['plot']:
-        plotting.animate_plot(artist_list, settings, ax, fig)
-        #plotting.animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, fig)
+        #plotting.animate_plot(artist_list, settings, ax, fig)
+        plotting.animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, fig)
 
         '''
         for I in isings:
