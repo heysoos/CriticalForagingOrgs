@@ -53,7 +53,7 @@ def create_settings():
     # iterations. Also begins saving figures after this many iterations if 'plot' setting is 'False'
     settings['plotLive'] = False  # live updates of figures
     settings['frameRate'] = 1
-    settings['animation_fps'] = 15
+    settings['animation_fps'] = 4
     
     settings['size'] = 10
     settings['nSensors'] = 3

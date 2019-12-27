@@ -29,17 +29,18 @@ def animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, f
     ani = animation.FuncAnimation(fig, __update_plot, fargs=[isings_all_timesteps, foods_all_timesteps, settings, ax, fig], interval=1, frames=len(isings_all_timesteps))
     #Writer = animation.FFMpegWriter
     Writer = animation.FFMpegFileWriter
-    writer = Writer(fps=settings['animation_fps'], metadata=dict(artist='Me'), bitrate=1800)
+    writer = Writer(fps=settings['animation_fps'], metadata=dict(artist='Sina Abdollahi, Jan Prosi'), bitrate=1800)
     ani.save(savepath, writer=writer)
     print('Animation successfully saved at {}'.format(savepath))
     #plt.show()
 
 def animate_plot(all_artists, settings, ax, fig):
-    #design_figure(settings, fig, ax)
+    design_figure(settings, fig, ax)
+    #initial_plot(isings_all_timesteps[0], foods_all_timesteps[0], settings, ax)
     #Writer = animation.FFMpegWriter
     savepath ='save\\{}\\animation-{}.mp4'.format(settings['loadfile'], time.strftime("%Y%m%d-%H%M%S"))
     Writer = animation.FFMpegFileWriter
-    writer = Writer(fps=settings['animation_fps'], metadata=dict(artist='Me'), bitrate=1800)
+    writer = Writer(fps=settings['animation_fps'], metadata=dict(artist='Sina Abdollahi, Jan Prosi'), bitrate=1800)
     ani = animation.ArtistAnimation(fig, all_artists)
     ani.save(savepath, writer=writer, dpi = 100)
     print('Animation successfully saved at {}'.format(savepath))
