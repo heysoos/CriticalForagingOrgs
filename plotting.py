@@ -2,6 +2,7 @@ from matplotlib import pyplot as plt
 from matplotlib.patches import Circle
 import matplotlib.lines as lines
 import matplotlib.animation as animation
+import time
 
 from math import sin
 from math import cos
@@ -21,24 +22,27 @@ def initial_plot(isings, foods, settings, ax):
         __plot_food_init(settings, food.xpos, food.ypos, ax)
 
 def animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, fig):
-
+    savepath = 'save\\{}\\animation-{}.mp4'.format(settings['loadfile'], time.strftime("%Y%m%d-%H%M%S"))
     design_figure(settings, fig, ax)
     initial_plot(isings_all_timesteps[0], foods_all_timesteps[0], settings, ax)
-    plt.savefig('firstframe.png', dpi =100, bbox_inches = 'tight')
+    #plt.savefig('firstframe.png', dpi =100, bbox_inches = 'tight')
     ani = animation.FuncAnimation(fig, __update_plot, fargs=[isings_all_timesteps, foods_all_timesteps, settings, ax, fig], interval=1, frames=len(isings_all_timesteps))
     #Writer = animation.FFMpegWriter
     Writer = animation.FFMpegFileWriter
-    writer = Writer(fps=1, metadata=dict(artist='Me'), bitrate=1800)
-    ani.save('lines.mp4', writer=writer)
+    writer = Writer(fps=settings['animation_fps'], metadata=dict(artist='Me'), bitrate=1800)
+    ani.save(savepath, writer=writer)
+    print('Animation successfully saved at {}'.format(savepath))
     #plt.show()
 
 def animate_plot(all_artists, settings, ax, fig):
     #design_figure(settings, fig, ax)
     #Writer = animation.FFMpegWriter
+    savepath ='save\\{}\\animation-{}.mp4'.format(settings['loadfile'], time.strftime("%Y%m%d-%H%M%S"))
     Writer = animation.FFMpegFileWriter
-    writer = Writer(fps=1, metadata=dict(artist='Me'), bitrate=1800)
+    writer = Writer(fps=settings['animation_fps'], metadata=dict(artist='Me'), bitrate=1800)
     ani = animation.ArtistAnimation(fig, all_artists)
-    ani.save('lines.mp4', writer=writer, dpi = 100)
+    ani.save(savepath, writer=writer, dpi = 100)
+    print('Animation successfully saved at {}'.format(savepath))
 
 
 def __update_plot(t, isings_all_timesteps, foods_all_timesteps, settings, ax, fig):
