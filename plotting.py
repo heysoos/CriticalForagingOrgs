@@ -169,11 +169,11 @@ def __create_food_artist(artist_list, settings, x1, y1):
 
 def initial_plot(isings, foods, settings, ax):
     for I in isings:
-        __plot_organism_init(settings, I.xpos, I.ypos, I.r, ax)
+        __plot_organism_init(settings, I[0], I[1], I[2], ax)
 
     # PLOT FOOD PARTICLES
     for food in foods:
-        __plot_food_init(settings, food.xpos, food.ypos, ax)
+        __plot_food_init(settings, food[0], food[1], ax)
 
 def __plot_organism_init(settings, x1, y1, theta, ax):
 

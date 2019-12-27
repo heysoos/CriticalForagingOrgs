@@ -573,6 +573,15 @@ def bitfield(n, size):
     x = [0] * (size - len(x)) + x
     return np.array(x)
 
+def extract_plot_information(isings, foods):
+    isings_info = []
+    foods_info = []
+    for I in isings:
+        isings_info.append([I.xpos, I.ypos, I.r])
+    for f in foods:
+        foods_info.append([f.xpos, f.ypos])
+    return isings_info, foods_info
+
 
 
 
@@ -614,8 +623,9 @@ def TimeEvolve(isings, foods, settings, folder, rep):
         # PLOT SIMULATION FRAME
         if settings['plot'] == True and (t % settings['frameRate']) == 0:
             #plot_frame(settings, folder, fig, ax, isings, foods, t, rep)
-            isings_all_timesteps.append(copy.deepcopy(isings))
-            foods_all_timesteps.append(copy.deepcopy(foods))
+            isings_info, foods_info = extract_plot_information(isings, foods)
+            isings_all_timesteps.append(isings_info)
+            foods_all_timesteps.append(foods_info)
             #plotting.design_figure(settings, fig, ax)
             #plotting.initial_plot(isings, foods, settings, ax)
             #artist_list.append(plotting.create_artists_append(isings, foods, settings))
