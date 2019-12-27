@@ -517,6 +517,7 @@ class ising:
         jj = j[randindex]
 
         self.J[ii, jj] = np.random.uniform(-1, 1) * self.max_weights
+        #Mutation of weights--> mutated weight is generated randomly from scratch
 
         # MUTATE LOCAL TEMPERATURE
         if settings['mutateB']:
@@ -590,8 +591,8 @@ def TimeEvolve(isings, foods, settings, folder, rep):
         # plt.ion()
         fig, ax = plt.subplots()
         #fig.set_size_inches(15, 10)
-        #isings_all_timesteps = []
-        #foods_all_timesteps = []
+        isings_all_timesteps = []
+        foods_all_timesteps = []
         artists_all_TS = []
 
 
@@ -609,13 +610,13 @@ def TimeEvolve(isings, foods, settings, folder, rep):
         # PLOT SIMULATION FRAME
         if settings['plot'] == True and (t % settings['frameRate']) == 0:
             #plot_frame(settings, folder, fig, ax, isings, foods, t, rep)
-            #isings_all_timesteps.append(isings)
-            #foods_all_timesteps.append(foods)
-            plotting.design_figure(settings, fig, ax)
-            plotting.initial_plot(isings, foods, settings, ax)
+            isings_all_timesteps.append(copy.deepcopy(isings))
+            foods_all_timesteps.append(copy.deepcopy(foods))
+            #plotting.design_figure(settings, fig, ax)
+            #plotting.initial_plot(isings, foods, settings, ax)
 
-            artists_all_TS.append(ax.artists)
-            ax.cla()
+            #artists_all_TS.append(ax.artists)
+            #ax.cla()
 
 
 
@@ -656,7 +657,8 @@ def TimeEvolve(isings, foods, settings, folder, rep):
             
             
     if settings['plot']:
-        plotting.animate_plot(artists_all_TS, settings, ax, fig)
+        #plotting.animate_plot(artists_all_TS, settings, ax, fig)
+        plotting.animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, fig)
 
         '''
         for I in isings:
@@ -737,7 +739,7 @@ def collect_result(result):
 
 def TimeEvolve2(isings, BetaFactor, settings, T):
     '''
-    Is this used anywhere?
+    Used to calculae heat capacity in natural environment... GA is removed for thid pupose ????
     '''
 
 

@@ -20,12 +20,12 @@ def initial_plot(isings, foods, settings, ax):
     for food in foods:
         __plot_food_init(settings, food.xpos, food.ypos, ax)
 
-def animate_plot_Func([isings_all_timesteps, foods_all_timesteps, settings, ax, fig):
+def animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, fig):
 
-
+    design_figure(settings, fig, ax)
     initial_plot(isings_all_timesteps[0], foods_all_timesteps[0], settings, ax)
     plt.savefig('firstframe.png', dpi =100, bbox_inches = 'tight')
-    ani = animation.FuncAnimation(fig, __update_plot, fargs=[isings_all_timesteps, foods_all_timesteps, settings, ax], interval=1, frames=len(isings_all_timesteps))
+    ani = animation.FuncAnimation(fig, __update_plot, fargs=[isings_all_timesteps, foods_all_timesteps, settings, ax, fig], interval=1, frames=len(isings_all_timesteps))
     #Writer = animation.FFMpegWriter
     Writer = animation.FFMpegFileWriter
     writer = Writer(fps=1, metadata=dict(artist='Me'), bitrate=1800)
@@ -38,14 +38,16 @@ def animate_plot(all_artists, settings, ax, fig):
     Writer = animation.FFMpegFileWriter
     writer = Writer(fps=1, metadata=dict(artist='Me'), bitrate=1800)
     ani = animation.ArtistAnimation(fig, all_artists)
-    ani.save('lines.mp4', writer=writer)
+    ani.save('lines.mp4', writer=writer, dpi = 100)
 
 
-def __update_plot(t, isings_all_timesteps, foods_all_timesteps, settings, ax):
+def __update_plot(t, isings_all_timesteps, foods_all_timesteps, settings, ax, fig):
     #[a.remove for a in reversed(ax.artists)]
-    plt.cla
+
     isings = isings_all_timesteps[t]
     foods = foods_all_timesteps[t]
+    ax.cla()
+    design_figure(settings, fig, ax)
     initial_plot(isings, foods, settings, ax)
 
     return ax.artists
