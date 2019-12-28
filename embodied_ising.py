@@ -934,11 +934,16 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
     else:
         folder = None
 
+
     count = 0
     for rep in range(Iterations):
         ''' 
         !!! jede Iteration
         '''
+        if rep in settings['plot_generations']:
+            settings['plot'] = True
+        else:
+            settings['plot'] = False
 
         TimeEvolve(isings, foods, settings, folder, rep)
         if settings['energy_model']:
@@ -988,8 +993,8 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
                     I.energies = []
             save_sim(folder, isings_copy, fitness_stat, mutationrate, fitC, fitm, rep)
 
-        if rep > (Iterations - settings['plot_n_last_generations'] + 1):
-            settings['plot'] = True
+
+
 
         count += 1
 

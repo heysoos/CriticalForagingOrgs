@@ -27,7 +27,7 @@ def animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, f
     Writer = animation.FFMpegFileWriter
     writer = Writer(fps=settings['animation_fps'], metadata=dict(artist='Sina Abdollahi, Jan Prosi'), bitrate=1800)
     ani.save(savepath, writer=writer)
-    print('Animation successfully saved at {}'.format(savepath))
+    print('\nAnimation successfully saved at {}'.format(savepath))
     #plt.show()
 
 def animate_plot(all_artists, settings, ax, fig):

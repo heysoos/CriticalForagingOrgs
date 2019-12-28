@@ -48,12 +48,13 @@ def create_settings():
     settings['y_max'] = 8.0  # arena northern border
     
     settings['save_data'] = args.save_data
-    settings['plot'] = args.plot # make plots?
-    settings['plot_n_last_generations'] = 1  # switches on plotting for n last generations
+    #settings['plot'] = args.plot # make plots? #replaced by plot_generations
     # iterations. Also begins saving figures after this many iterations if 'plot' setting is 'False'
+    settings['plot_generations'] = args.plot_gens #List of generations that animation should be created for
+    #Might not work for two generations in a row in current implmentation
     settings['plotLive'] = False  # live updates of figures
     settings['frameRate'] = 1
-    settings['animation_fps'] = 15
+    settings['animation_fps'] = args.fps
     
     settings['size'] = 10
     settings['nSensors'] = 3
@@ -68,11 +69,14 @@ def create_settings():
     settings['mutateB'] = True  # toggle to allow Beta (temperature) mutations (toggle off if critical learning is on)
     settings['sigB'] = 0.02  # std for Beta mutation
     
-    settings['LoadIsings'] = False
-    # settings['loadfile'] = 'sim-20180524-100859-evo'
-    settings['loadfile'] = 'sim-20190226-153725'
-    settings['iter'] = '482'
-    
+
+    #settings['loadfile'] = sim-20191114-000009_server
+    settings['loadfile'] = args.loadfile
+    settings['iter'] = args.loaditer
+    if settings['loadfile'] is '':
+        settings['LoadIsings'] = False
+    else:
+        settings['LoadIsings'] = True
     #Seasons
     settings['seasons'] = False #BOO; Activates seasons
     settings['years_per_iteration'] = 1 #INT amount of seasonal changes per iteration
@@ -99,13 +103,22 @@ def parse():
                                      '''Agent-based simulation of artificial organisms 
                                      controlled by a statistical neural net (ising model)''')
     parser.add_argument('-s', '--save', dest='save_data', action='store_true', help = "Save data of simulation")
-    parser.add_argument('-p', '--plot', dest='plot', action='store_true',
-                        help="Plot simulation data, drastically decreases runtime")
+    # parser.add_argument('-p', '--plot', dest='plot', action='store_true',
+    #                     help="Plot animated simulation data for each generation, drastically increases runtime")
     parser.add_argument('-i', '--iterations', type=int, dest = 'iterations',
                         help='Number of Iterations in simulation')
     parser.add_argument('-t', '--timesteps', type=int, dest = 'time_steps',
                         help='Number of Iterations in simulation')
-    parser.set_defaults(save_data=False, plot=False, iterations=2000, time_steps=2000)
+    parser.add_argument('-a', '--animate_gens', nargs='+', required=False, dest = 'plot_gens', type=int
+                        , help='''Generations of which animation shall be created. 
+                        Expects blank separated list of ints. Do not plot two subsequent generations''')
+    parser.add_argument('-fps', type=int, dest='fps', help='FPS in animation')
+    parser.add_argument('-l','--loadfile', type=str, dest = 'loadfile',
+                        help='Filename of previously saved simulation in save folder. Specify iteration using -li')
+    parser.add_argument('-li', '--loaditer', type=int, dest='loaditer',
+                        help='Iteration of previously saved simulation that is loaded. Only use in combination with -l')
+    parser.set_defaults(save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps = 20,
+                        loadfile='', loaditer = 2000)
     args = parser.parse_args()
     return args
 
