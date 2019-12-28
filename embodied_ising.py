@@ -4,6 +4,8 @@ import plotting
 import numpy as np
 import operator
 from itertools import combinations
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import copy
 

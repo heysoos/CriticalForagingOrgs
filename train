@@ -26,6 +26,8 @@ def create_settings():
     settings['org_radius'] = 0.05
     settings['ANN'] = False  # Use ANN or Ising?
     settings['BoidOn'] = False  # Only use Boid model? #True
+
+    settings['server_mode'] = False
     
     # SIMULATION SETTINGS
     settings['TimeSteps'] = args.time_steps # number of timesteps per iteration #2000

@@ -1,4 +1,5 @@
 import matplotlib as mpl
+mpl.use('Agg') #For server use
 from matplotlib import pyplot as plt
 from matplotlib.patches import Circle
 import matplotlib.lines as lines
@@ -10,7 +11,10 @@ from math import cos
 from math import radians
 import os
 
-plt.rcParams['animation.ffmpeg_path'] = "D:\\Program Files\\ffmpeg-20191217-bd83191-win64-static\\bin\\ffmpeg.exe"
+if settings['server_mode']:
+    plt.rcParams['animation.ffmpeg_path'] ='/data-uwks159/home/jprosi/critical_evolution/criticalevolution/lib/python3.6/site-packages/ffmpeg'
+else:
+    plt.rcParams['animation.ffmpeg_path'] = "D:\\Program Files\\ffmpeg-20191217-bd83191-win64-static\\bin\\ffmpeg.exe"
 #plt.rcParams["figure.figsize"] = [8,8]
 
 #--- FUNCTIONS ----------------------------------------------------------------+
