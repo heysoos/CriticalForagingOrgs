@@ -76,8 +76,8 @@ class ising:
         '''
         initial beta
         '''
-
-        self.Beta = 1.0
+        self.Beta = settings['init_beta']
+        #self.Beta = 1.0
         # self.defaultT = max(100, netsize * 20)
 
         self.Ssize1 = 1 # FOOD ROTATIONAL SENSOR: sigmoid(theta)

@@ -65,7 +65,8 @@ def create_settings():
     # how should organisms repopulate, duplicate or mate?
     settings['mateDupRatio'] = 0.5
     settings['mutationRateDup'] = 0.1  # DUPLICATION mutation rate
-    
+
+    settings['init_beta'] = args.init_beta
     settings['mutateB'] = True  # toggle to allow Beta (temperature) mutations (toggle off if critical learning is on)
     settings['sigB'] = 0.02  # std for Beta mutation
     
@@ -78,7 +79,7 @@ def create_settings():
     else:
         settings['LoadIsings'] = True
     #Seasons
-    settings['seasons'] = False #BOO; Activates seasons
+    settings['seasons'] = not args.no_seasons #BOO; Activates seasons
     settings['years_per_iteration'] = 1 #INT amount of seasonal changes per iteration
     settings['min_food_winter'] = 0.5 #FLOAT [0,1]; relative decimation of food in winter
     
@@ -101,29 +102,36 @@ def create_settings():
 def parse():
     parser = argparse.ArgumentParser(description=
                                      '''Agent-based evolutionary simulation of artificial organisms 
-                                     controlled by a statistical neural net (ising model)''')
-    parser.add_argument('-p', '--pop_size', dest='pop_size', type=int, help='Number of individuals in each generation')
-    parser.add_argument('-f','--food_num', dest='num_food', type=int,
+                                     controlled by a statistical neural net (ising model)
+                                     ------Default values-----
+                                     save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps = 20,
+                        loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0
+                                     ''')
+    parser.add_argument('-p', '--pop', dest='pop_size', type=int, help='Number of individuals in each generation')
+    parser.add_argument('-f','--food', dest='num_food', type=int,
                         help='''Number of food particles. Serves as largest number of food particles when seasons are 
                         activated''')
+    parser.add_argument('-b', '--beta', dest = 'init_beta', type = float, help='Initial beta of first generation')
     parser.add_argument('-s', '--save', dest='save_data', action='store_true', help = "Save data of simulation")
     # parser.add_argument('-p', '--plot', dest='plot', action='store_true',
     #                     help="Plot animated simulation data for each generation, drastically increases runtime")
-    parser.add_argument('-i', '--iterations', type=int, dest = 'iterations',
+    parser.add_argument('-g', '--gen', type=int, dest = 'iterations',
                         help='Number of Iterations in simulation')
-    parser.add_argument('-t', '--timesteps', type=int, dest = 'time_steps',
+    parser.add_argument('-t', '--ts', type=int, dest = 'time_steps',
                         help='Number of Iterations in simulation')
-    parser.add_argument('-a', '--animate_gens', nargs='+', required=False, dest = 'plot_gens', type=int
+    parser.add_argument('-a', '--ani', nargs='+', required=False, dest = 'plot_gens', type=int
                         , help='''Generations of which animation shall be created. 
                         Expects blank separated list of ints. Do not plot two subsequent generations''')
     parser.add_argument('-fps', type=int, dest='fps', help='FPS in animation')
-    parser.add_argument('-l','--loadfile', type=str, dest = 'loadfile',
+    parser.add_argument('-l','--load', type=str, dest = 'loadfile',
                         help='Filename of previously saved simulation in save folder. Specify iteration using -li')
-    parser.add_argument('-li', '--loaditer', type=int, dest='loaditer',
+    parser.add_argument('-li', '--loadi', type=int, dest='loaditer',
                         help='Iteration of previously saved simulation that is loaded. Only use in combination with -l')
+    parser.add_argument('-ns', '--nseas', action='store_true', dest='no_seasons', help='Deactivates seasons')
+
 
     parser.set_defaults(save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps = 20,
-                        loadfile='', loaditer = 2000, pop_size=50, food_num=100)
+                        loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False)
     args = parser.parse_args()
     return args
 
