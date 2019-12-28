@@ -27,7 +27,7 @@ def create_settings():
     settings['ANN'] = False  # Use ANN or Ising?
     settings['BoidOn'] = False  # Only use Boid model? #True
 
-    settings['server_mode'] = False
+    settings['server_mode'] = args.server_mode
     
     # SIMULATION SETTINGS
     settings['TimeSteps'] = args.time_steps # number of timesteps per iteration #2000
@@ -130,10 +130,13 @@ def parse():
     parser.add_argument('-li', '--loadi', type=int, dest='loaditer',
                         help='Iteration of previously saved simulation that is loaded. Only use in combination with -l')
     parser.add_argument('-ns', '--nseas', action='store_true', dest='no_seasons', help='Deactivates seasons')
+    parser.add_argument('-ser', '--ser', action='store_true', dest='server_mode',
+                        help='''Activates server mode. Certain plotting settings are adjusted for linux server''')
 
 
     parser.set_defaults(save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps = 20,
-                        loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False)
+                        loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False,
+                        server_mode = False)
     args = parser.parse_args()
     return args
 

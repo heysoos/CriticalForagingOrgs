@@ -11,10 +11,7 @@ from math import cos
 from math import radians
 import os
 
-if settings['server_mode']:
-    plt.rcParams['animation.ffmpeg_path'] ='/data-uwks159/home/jprosi/critical_evolution/criticalevolution/lib/python3.6/site-packages/ffmpeg'
-else:
-    plt.rcParams['animation.ffmpeg_path'] = "D:\\Program Files\\ffmpeg-20191217-bd83191-win64-static\\bin\\ffmpeg.exe"
+
 #plt.rcParams["figure.figsize"] = [8,8]
 
 #--- FUNCTIONS ----------------------------------------------------------------+
@@ -23,10 +20,15 @@ else:
 
 def animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, fig, rep, t, save_folder):
     ''' Uses FuncAnimation - works and currently implemented'''
-    if settings['LoadIsings']:
-        path = 'save\\{}\\'.format(settings['loadfile'])
+    if settings['server_mode']:
+        plt.rcParams['animation.ffmpeg_path'] = '/usr/local/bin/ffmpeg'
     else:
-        path = '{}\\animations\\'.format(save_folder)
+        plt.rcParams['animation.ffmpeg_path'] = "D:/Program Files/ffmpeg-20191217-bd83191-win64-static/bin/ffmpeg.exe"
+
+    if settings['LoadIsings']:
+        path = 'save/{}/'.format(settings['loadfile'])
+    else:
+        path = '{}animations/'.format(save_folder)
     savename = 'ani-{}-{}ts-gen{}.mp4'.format(time.strftime("%Y%m%d-%H%M%S"), t, rep)
     savepath = path + savename
     if not os.path.exists(path):
@@ -46,10 +48,14 @@ def animate_plot(all_artists, settings, ax, fig):
     '''
     Uses ArtistAnimation - currently not implemented as ryceptions occur when saving
     '''
+    if settings['server_mode']:
+        plt.rcParams['animation.ffmpeg_path'] = '/usr/local/bin/ffmpeg'
+    else:
+        plt.rcParams['animation.ffmpeg_path'] = "D:/Program Files/ffmpeg-20191217-bd83191-win64-static/bin/ffmpeg.exe"
     design_figure(settings, fig, ax)
     #initial_plot(isings_all_timesteps[0], foods_all_timesteps[0], settings, ax)
     #Writer = animation.FFMpegWriter
-    savepath ='save\\{}\\animation-{}.mp4'.format(settings['loadfile'], time.strftime("%Y%m%d-%H%M%S"))
+    savepath ='save/{}/animation-{}.mp4'.format(settings['loadfile'], time.strftime("%Y%m%d-%H%M%S"))
     Writer = animation.FFMpegFileWriter
     writer = Writer(fps=settings['animation_fps'], metadata=dict(artist='Sina Abdollahi, Jan Prosi'), bitrate=1800)
     #Writer = animation.writers['ffmpeg']
