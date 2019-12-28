@@ -634,12 +634,6 @@ def TimeEvolve(isings, foods, settings, folder, rep):
             #artists_all_TS[t] = copy.deepcopy(ax.artists)
             #ax.cla()
 
-
-
-
-            #set_path
-            #set_data
-        
         '''
         can optimize interact with matrix calculations instead of loops
         '''
@@ -675,7 +669,7 @@ def TimeEvolve(isings, foods, settings, folder, rep):
             
     if settings['plot']:
         #plotting.animate_plot(artist_list, settings, ax, fig)
-        plotting.animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, fig)
+        plotting.animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, fig, rep, t, folder)
 
         '''
         for I in isings:
@@ -916,13 +910,13 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
     '''
     Called by "train"
     '''
-    
 
+    folder = 'save/sim-' + time.strftime("%Y%m%d-%H%M%S") + '/'
     if settings['save_data'] == True:#
         '''
         name save folder
         '''
-        folder = 'save/sim-' + time.strftime("%Y%m%d-%H%M%S") + '/'
+
         if not os.path.exists(folder):
             os.makedirs(folder)
             os.makedirs(folder + 'isings')
@@ -931,8 +925,8 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
 
             #save settings dicitionary
             save_settings(folder, settings)
-    else:
-        folder = None
+    # else:
+    #     folder = None
 
 
     count = 0
@@ -1012,9 +1006,8 @@ def CriticalLearning(isings, foods, settings, Iterations=1):
     mutationrate = np.zeros(2)
 
     u = 0.01
-
+    folder = 'save/sim-' + time.strftime("%Y%m%d-%H%M%S") + '/'
     if settings['save_data'] == True:
-        folder = 'save/sim-' + time.strftime("%Y%m%d-%H%M%S") + '/'
         if not os.path.exists(folder):
             os.makedirs(folder)
             os.makedirs(folder + 'isings')

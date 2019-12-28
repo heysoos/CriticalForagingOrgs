@@ -8,6 +8,7 @@ import time
 from math import sin
 from math import cos
 from math import radians
+import os
 
 plt.rcParams['animation.ffmpeg_path'] = "D:\\Program Files\\ffmpeg-20191217-bd83191-win64-static\\bin\\ffmpeg.exe"
 #plt.rcParams["figure.figsize"] = [8,8]
@@ -16,9 +17,16 @@ plt.rcParams['animation.ffmpeg_path'] = "D:\\Program Files\\ffmpeg-20191217-bd83
 
 
 
-def animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, fig):
+def animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, fig, rep, t, save_folder):
     ''' Uses FuncAnimation - works and currently implemented'''
-    savepath = 'save\\{}\\animation-{}.mp4'.format(settings['loadfile'], time.strftime("%Y%m%d-%H%M%S"))
+    if settings['LoadIsings']:
+        path = 'save\\{}\\'.format(settings['loadfile'])
+    else:
+        path = '{}\\animations\\'.format(save_folder)
+    savename = 'ani-{}-{}ts-gen{}.mp4'.format(time.strftime("%Y%m%d-%H%M%S"), t, rep)
+    savepath = path + savename
+    if not os.path.exists(path):
+        os.makedirs(path)
     design_figure(settings, fig, ax)
     initial_plot(isings_all_timesteps[0], foods_all_timesteps[0], settings, ax)
     #plt.savefig('firstframe.png', dpi =100, bbox_inches = 'tight')
