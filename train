@@ -19,9 +19,9 @@ def create_settings():
     settings = {}
     
     # ENVIRONMENT SETTINGS
-    settings['pop_size'] = 50  # number of organisms #150
+    settings['pop_size'] = args.pop_size #50  # number of organisms #150
     settings['numKill'] = int(settings['pop_size'] / 1.66)
-    settings['food_num'] = 100  # number of food particles
+    settings['food_num'] = args.food_num #100  # number of food particles
     settings['food_radius'] = 0.03
     settings['org_radius'] = 0.05
     settings['ANN'] = False  # Use ANN or Ising?
@@ -100,8 +100,12 @@ def create_settings():
 
 def parse():
     parser = argparse.ArgumentParser(description=
-                                     '''Agent-based simulation of artificial organisms 
+                                     '''Agent-based evolutionary simulation of artificial organisms 
                                      controlled by a statistical neural net (ising model)''')
+    parser.add_argument('-p', '--pop_size', dest='pop_size', type=int, help='Number of individuals in each generation')
+    parser.add_argument('-f','--food_num', dest='num_food', type=int,
+                        help='''Number of food particles. Serves as largest number of food particles when seasons are 
+                        activated''')
     parser.add_argument('-s', '--save', dest='save_data', action='store_true', help = "Save data of simulation")
     # parser.add_argument('-p', '--plot', dest='plot', action='store_true',
     #                     help="Plot animated simulation data for each generation, drastically increases runtime")
@@ -117,8 +121,9 @@ def parse():
                         help='Filename of previously saved simulation in save folder. Specify iteration using -li')
     parser.add_argument('-li', '--loaditer', type=int, dest='loaditer',
                         help='Iteration of previously saved simulation that is loaded. Only use in combination with -l')
+
     parser.set_defaults(save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps = 20,
-                        loadfile='', loaditer = 2000)
+                        loadfile='', loaditer = 2000, pop_size=50, food_num=100)
     args = parser.parse_args()
     return args
 
