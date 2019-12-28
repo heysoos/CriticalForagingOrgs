@@ -70,7 +70,7 @@ def create_settings():
     
     settings['LoadIsings'] = True
     settings['loadfile'] = 'sim-20191114-000009_server'
-    settings['iter'] = '1999'
+    settings['iter'] = '500'
     
     #Seasons
     settings['seasons'] = False #BOO; Activates seasons
