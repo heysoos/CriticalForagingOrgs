@@ -952,7 +952,7 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
 
         # mutationrate[0], mutationrate[1] = mutation_rate(isings)
 
-        if rep % settings['evolution_rate'] == 0 and settings['save_data'] == True:
+        if rep % settings['evolution_rate'] == 0:
 
             fitness, fitness_stat = food_fitness(isings)
             eat_rate = np.sum(fitness_stat)/settings['TimeSteps'] #avg fitnes, normalized by timestep
@@ -980,15 +980,13 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
             else:
                 print('\n', count, '|', 'Avg_fitness', eat_rate)
 
-            if settings['energy_model']:
-                # Clear I.energies in isings_copy before saving
-                isings_copy = deepcopy(isings)
-                for I in isings_copy:
-                    I.energies = []
-            save_sim(folder, isings_copy, fitness_stat, mutationrate, fitC, fitm, rep)
-
-
-
+            if settings['save_data']:
+                if settings['energy_model']:
+                    # Clear I.energies in isings_copy before saving
+                    isings_copy = deepcopy(isings)
+                    for I in isings_copy:
+                        I.energies = []
+                save_sim(folder, isings_copy, fitness_stat, mutationrate, fitC, fitm, rep)
 
         count += 1
 
