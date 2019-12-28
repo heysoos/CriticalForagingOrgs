@@ -37,12 +37,16 @@ def animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, f
     initial_plot(isings_all_timesteps[0], foods_all_timesteps[0], settings, ax)
     #plt.savefig('firstframe.png', dpi =100, bbox_inches = 'tight')
     ani = animation.FuncAnimation(fig, __update_plot, fargs=[isings_all_timesteps, foods_all_timesteps, settings, ax, fig], interval=1, frames=len(isings_all_timesteps))
-    #Writer = animation.FFMpegWriter
-    Writer = animation.FFMpegFileWriter
-    writer = Writer(fps=settings['animation_fps'], metadata=dict(artist='Sina Abdollahi, Jan Prosi'), bitrate=1800)
-    ani.save(savepath, writer=writer)
+
+    if settings['server_mode'] is False:
+        Writer = animation.FFMpegFileWriter
+        writer = Writer(fps=settings['animation_fps'], metadata=dict(artist='Sina Abdollahi, Jan Prosi'), bitrate=1800)
+        writer.frame_format = 'png'
+        ani.save(savepath, writer=writer)
+    else:
+        ani.save(savepath, writer='imagemagick') #TODO: dpi=100
     print('\nAnimation successfully saved at {}'.format(savepath))
-    #plt.show()
+
 
 def animate_plot(all_artists, settings, ax, fig):
     '''
