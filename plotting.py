@@ -45,8 +45,8 @@ def animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, f
         writer.frame_format = 'png'
         ani.save(savepath, writer=writer)
     else:
-        #Using defaul writer or imagemagick
-        ani.save(savepath, dpi=100, fps=settings['animation_fps']) #TODO: dpi=100 writer='imagemagick',
+        #Using defaul writer instead of imagemagick
+        ani.save(savepath, dpi=100, writer='imagemagick', fps=settings['animation_fps']) #TODO: dpi=100 writer='imagemagick',
     print('\nAnimation successfully saved at {}'.format(savepath))
 
 
