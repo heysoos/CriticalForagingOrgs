@@ -41,7 +41,7 @@ def create_settings():
     settings['dt'] = 0.2  # kinetic time step      (dt)
     settings['r_max'] = 720
     settings['dr_max'] = 90  # max rotational speed      (degrees per second)
-    settings['v_max'] = 999  # 0.5 max velocity              (units per second)
+    settings['v_max'] = args.v_max #999  # 0.5 max velocity              (units per second)
     settings['dv_max'] = 0.05  # max acceleration (+/-)    (units per second^2)
     
     settings['x_min'] = 0.0  # arena eastern border
@@ -135,12 +135,13 @@ def parse():
                         help='''Activates server mode. Certain plotting settings are adjusted for linux server''')
     parser.add_argument('-cs', '--cospeed', dest='cost_speed', type=float,
                         help='FLOAT [0,1] energy cost of speed as a factor of speed')
+    parser.add_argument('-vm', '--v_max', dest='v_max', type=float, help='Max speed of agends')
 
 
 
-    parser.set_defaults(save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps = 20,
+    parser.set_defaults(save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps=20,
                         loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False,
-                        server_mode = False, cost_speed=0.05)
+                        server_mode = False, cost_speed=0.05, v_max=999.0)
     args = parser.parse_args()
     return args
 
