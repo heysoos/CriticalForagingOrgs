@@ -22,9 +22,7 @@ from math import sqrt
 from random import uniform
 from copy import deepcopy
 import multiprocessing as mp
-
-
-
+import sys
 import os
 import pickle
 import time
@@ -915,8 +913,10 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
     '''
     Called by "train"
     '''
-
-    folder = 'save/sim-' + time.strftime("%Y%m%d-%H%M%S") + '/'
+    #Add command line input to folder name
+    s = sys.argv[1:]
+    command_input = '_'.join([str(elem) for elem in s])
+    folder = 'save/sim-' + time.strftime("%Y%m%d-%H%M%S") + command_input + '/'
     if settings['save_data'] == True:#
         '''
         name save folder
