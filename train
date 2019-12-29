@@ -90,7 +90,7 @@ def create_settings():
     
     settings['energy_model'] = True #BOO
     settings['v_min'] = 0.05  # FLOAT [0,1)
-    settings['cost_speed'] = 0.05  # FLOAT [0,1] energy cost of speed as a factor of speed #before 0.025
+    settings['cost_speed'] = args.cost_speed  # FLOAT [0,1] energy cost of speed as a factor of speed #default 0.05
     settings['initial_energy'] = 0  # Energy that each organism starts with in each simulation
 
     
@@ -107,7 +107,8 @@ def parse():
                                      controlled by a statistical neural net (ising model)
                                      ------Default values-----
                                      save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps = 20,
-                        loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0
+                                     loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False,
+                                     server_mode = False, cost_speed=0.05
                                      ''')
     parser.add_argument('-p', '--pop', dest='pop_size', type=int, help='Number of individuals in each generation')
     parser.add_argument('-f','--food', dest='num_food', type=int,
@@ -132,11 +133,14 @@ def parse():
     parser.add_argument('-ns', '--nseas', action='store_true', dest='no_seasons', help='Deactivates seasons')
     parser.add_argument('-ser', '--ser', action='store_true', dest='server_mode',
                         help='''Activates server mode. Certain plotting settings are adjusted for linux server''')
+    parser.add_argument('-cs', '--cospeed', dest='cost_speed', type=float,
+                        help='FLOAT [0,1] energy cost of speed as a factor of speed')
+
 
 
     parser.set_defaults(save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps = 20,
                         loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False,
-                        server_mode = False)
+                        server_mode = False, cost_speed=0.05)
     args = parser.parse_args()
     return args
 
