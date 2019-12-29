@@ -21,7 +21,8 @@ import os
 def animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, fig, rep, t, save_folder):
     ''' Uses FuncAnimation - works and currently implemented'''
     if settings['server_mode']:
-        plt.rcParams['animation.ffmpeg_path'] = '/usr/local/bin/ffmpeg'
+        plt.rcParams['animation.ffmpeg_path'] = '/data-uwks159/home/jprosi/ffmpeg-4.2.1-linux-64/ffmpeg'
+        #'/usr/local/bin/ffmpeg'
     else:
         plt.rcParams['animation.ffmpeg_path'] = "D:/Program Files/ffmpeg-20191217-bd83191-win64-static/bin/ffmpeg.exe"
 
@@ -38,15 +39,18 @@ def animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, f
     #plt.savefig('firstframe.png', dpi =100, bbox_inches = 'tight')
     ani = animation.FuncAnimation(fig, __update_plot, fargs=[isings_all_timesteps, foods_all_timesteps, settings, ax, fig], interval=1, frames=len(isings_all_timesteps))
 
-    if False:
+    if True:
         #ffmpeg does not work on server, therefore default writer used
         Writer = animation.FFMpegFileWriter
         writer = Writer(fps=settings['animation_fps'], metadata=dict(artist='Sina Abdollahi, Jan Prosi'), bitrate=1800)
         writer.frame_format = 'png'
         ani.save(savepath, writer=writer)
-    else:
+    elif False:
         #Using defaul writer instead of imagemagick
         ani.save(savepath, dpi=100, writer='imagemagick', fps=settings['animation_fps']) #TODO: dpi=100 writer='imagemagick',
+    elif False:
+        writer = animation.ImageMagickFileWriter(fps=settings['animation_fps'], metadata=dict(artist='Sina Abdollahi, Jan Prosi'), bitrate=1800)
+        ani.save('location.gif', writer=writer, dpi = 100)#
     print('\nAnimation successfully saved at {}'.format(savepath))
 
 

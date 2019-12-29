@@ -671,10 +671,10 @@ def TimeEvolve(isings, foods, settings, folder, rep):
             
     if settings['plot']:
         #plotting.animate_plot(artist_list, settings, ax, fig)
-        try:
-            plotting.animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, fig, rep, t, folder)
-        except Exception:
-            print('There occurred an error during animation...the simulation keeps going')
+        # try:
+        plotting.animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, fig, rep, t, folder)
+        # except Exception:
+        #     print('There occurred an error during animation...the simulation keeps going')
 
         '''
         for I in isings:
