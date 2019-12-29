@@ -69,8 +69,8 @@ def create_settings():
     settings['mutationRateDup'] = 0.1  # DUPLICATION mutation rate
 
     settings['init_beta'] = args.init_beta
-    settings['mutateB'] = True  # toggle to allow Beta (temperature) mutations (toggle off if critical learning is on)
-    settings['sigB'] = 0.02  # std for Beta mutation
+    settings['mutateB'] = not args.no_mut_beta  # toggle to allow Beta (temperature) mutations (toggle off if critical learning is on)
+    settings['sigB'] = args.sig_beta #0.02  # std for Beta mutation
     
 
     #settings['loadfile'] = sim-20191114-000009_server
@@ -106,22 +106,25 @@ def parse():
                                      '''Agent-based evolutionary simulation of artificial organisms 
                                      controlled by a statistical neural net (ising model)
                                      ------Default values-----
-                                     save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps = 20,
-                                     loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False,
-                                     server_mode = False, cost_speed=0.05
+                                     save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps=20,
+                        loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False,
+                        server_mode = False, cost_speed=0.05, v_max=999.0, sig_beta=0.02, no_mut_beta=False
                                      ''')
     parser.add_argument('-p', '--pop', dest='pop_size', type=int, help='Number of individuals in each generation')
     parser.add_argument('-f','--food', dest='num_food', type=int,
                         help='''Number of food particles. Serves as largest number of food particles when seasons are 
                         activated''')
-    parser.add_argument('-b', '--beta', dest = 'init_beta', type = float, help='Initial beta of first generation')
     parser.add_argument('-s', '--save', dest='save_data', action='store_true', help = "Save data of simulation")
     # parser.add_argument('-p', '--plot', dest='plot', action='store_true',
     #                     help="Plot animated simulation data for each generation, drastically increases runtime")
     parser.add_argument('-g', '--gen', type=int, dest = 'iterations',
-                        help='Number of Iterations in simulation')
+                        help='Number of generations in simulation')
     parser.add_argument('-t', '--ts', type=int, dest = 'time_steps',
-                        help='Number of Iterations in simulation')
+                        help='Number of time steps in simulation')
+    parser.add_argument('-b', '--beta', dest='init_beta', type=float, help='Initial beta of first generation')
+    parser.add_argument('-sb', '--sigb', dest='sig_beta', type=float,
+                        help='Std of normal distribution for beta mutation')
+    parser.add_argument('-nmb', '--nomutb', dest='no_mut_beta', action='store_true', help='Switch off beta mutation')
     parser.add_argument('-a', '--ani', nargs='+', required=False, dest = 'plot_gens', type=int
                         , help='''Generations of which animation shall be created. 
                         Expects blank separated list of ints. Do not plot two subsequent generations''')
@@ -139,9 +142,10 @@ def parse():
 
 
 
+
     parser.set_defaults(save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps=20,
                         loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False,
-                        server_mode = False, cost_speed=0.05, v_max=999.0)
+                        server_mode = False, cost_speed=0.05, v_max=999.0, sig_beta=0.02, no_mut_beta=False)
     args = parser.parse_args()
     return args
 

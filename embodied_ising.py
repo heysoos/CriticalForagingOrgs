@@ -524,7 +524,7 @@ class ising:
         # MUTATE LOCAL TEMPERATURE
         if settings['mutateB']:
             deltaB = np.abs(np.random.normal(1, settings['sigB']))
-            self.Beta = self.Beta * deltaB
+            self.Beta = self.Beta * deltaB  #TODO mutate beta not by multiplying? How was Beta modified originally?
 
 
 class food():
@@ -960,7 +960,9 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
         if rep % settings['evolution_rate'] == 0:
 
             fitness, fitness_stat = food_fitness(isings)
-            eat_rate = np.sum(fitness_stat)/settings['TimeSteps'] #avg fitnes, normalized by timestep
+
+            if settings['energy_model'] == False:
+                eat_rate = np.sum(fitness_stat)/settings['TimeSteps'] #avg fitnes, normalized by timestep
 
             if settings['mutateB']:
                 Beta = []
@@ -978,9 +980,13 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
             fitm = None
             fitC = None
 
+            if settings['energy_model']:
+                fit_func_param_name = 'avg_energy'
+            else:
+                fit_func_param_name = 'eat_ratre'
 
             if settings['mutateB']:
-                print('\n', count, '|', 'avg_Fitness', eat_rate, 'mean_Beta', mBeta,
+                print('\n', count, '|', fit_func_param_name, eat_rate, 'mean_Beta', mBeta,
                       'std_Beta', stdBeta, 'min_Beta', minBeta, 'max_Beta', maxBeta)
             else:
                 print('\n', count, '|', 'Avg_fitness', eat_rate)
@@ -1110,6 +1116,7 @@ def calc_fit(isings, mutationrate, fitness_stat, count):
 def food_fitness(isings):
     fitness = []
     for I in isings:
+
         fitness.append(I.fitness)
 
     fitness = np.array(fitness, dtype='float')
