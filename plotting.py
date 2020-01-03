@@ -29,16 +29,18 @@ def animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, f
         plt.rcParams['animation.ffmpeg_path'] = "D:/Program Files/ffmpeg-20191217-bd83191-win64-static/bin/ffmpeg.exe"
 
     if settings['LoadIsings']:
-        path = 'save/{}/'.format(settings['loadfile'])
+        path = 'save/{}/nimation_gen{}/'.format(settings['loadfile'], rep)
     else:
-        path = '{}animations/'.format(save_folder)
+        path = '/{}animation_gen{}/'.format(save_folder, rep)
     savename = 'ani-{}-{}ts-gen{}.mp4'.format(time.strftime("%Y%m%d-%H%M%S"), t, rep)
 
-    savepath = path + savename
+    savepath = savename
+    cur_wdir = os.getcwd()
+    path = cur_wdir.replace('\\','/') + path
     if not os.path.exists(path):
         os.makedirs(path)
-    #cur_wdir = os.getcwd()
-    #os.chdir(cur_wdir + path)
+
+    os.chdir(path)
     design_figure(settings, fig, ax)
     initial_plot(isings_all_timesteps[0], foods_all_timesteps[0], settings, ax)
     #plt.savefig('firstframe.png', dpi =100, bbox_inches = 'tight')
@@ -57,6 +59,7 @@ def animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, f
         writer = animation.ImageMagickFileWriter(fps=settings['animation_fps'], metadata=dict(artist='Sina Abdollahi, Jan Prosi'), bitrate=1800)
         ani.save('location.gif', writer=writer, dpi = 100)#
     print('\nAnimation successfully saved at {}'.format(savepath))
+    os.chdir(cur_wdir)
 
 
 def animate_plot(all_artists, settings, ax, fig):
