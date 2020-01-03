@@ -99,6 +99,7 @@ def create_settings():
 
 
 
+
     return settings, Iterations
 
 def parse():
@@ -150,6 +151,9 @@ def parse():
                         server_mode = False, cost_speed=0.05, v_max=999.0, sig_beta=0.02, no_mut_beta=False, init_energy=0)
     args = parser.parse_args()
     return args
+
+
+
 
 # --- MAIN ---------------------------------------------------------------------+
 
@@ -209,5 +213,6 @@ def run(settings):
 if __name__ ==  '__main__':
     settings, Iterations = create_settings()
     run(settings)
+
 
 # --- END ----------------------------------------------------------------------+

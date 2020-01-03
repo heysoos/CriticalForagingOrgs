@@ -1261,6 +1261,9 @@ def save_settings(folder, settings):
     with open(folder + 'settings.csv', 'w') as f:
         for key in settings.keys():
             f.write("%s,%s\n" % (key, settings[key]))
+    pickle_out = open('{}settings.pickle'.format(folder), 'wb')
+    pickle.dump(settings, pickle_out)
+    pickle_out.close()
 
 
 
