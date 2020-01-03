@@ -20,6 +20,8 @@ import os
 
 def animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, fig, rep, t, save_folder):
     ''' Uses FuncAnimation - works and currently implemented'''
+    my_path = os.path.abspath(__file__)
+    #mpl.rcParams["savefig.directory"] = my_path + 'tmp/'
     if settings['server_mode']:
         plt.rcParams['animation.ffmpeg_path'] = '/data-uwks159/home/jprosi/ffmpeg-4.2.1-linux-64/ffmpeg'
         #'/usr/local/bin/ffmpeg'
@@ -31,9 +33,12 @@ def animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, f
     else:
         path = '{}animations/'.format(save_folder)
     savename = 'ani-{}-{}ts-gen{}.mp4'.format(time.strftime("%Y%m%d-%H%M%S"), t, rep)
+
     savepath = path + savename
     if not os.path.exists(path):
         os.makedirs(path)
+    #cur_wdir = os.getcwd()
+    #os.chdir(cur_wdir + path)
     design_figure(settings, fig, ax)
     initial_plot(isings_all_timesteps[0], foods_all_timesteps[0], settings, ax)
     #plt.savefig('firstframe.png', dpi =100, bbox_inches = 'tight')
