@@ -7,36 +7,30 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Circle
 import pickle
 from os import makedirs, path
+from automatic_plot_helper import detect_all_isings
+from automatic_plot_helper import load_settings
 import os
+import sys
 '''
 loadfiles = ['beta_experiment/beta-0-1/sim-20180512-105719',
              'beta_experiment/beta-1/sim-20180511-163319',
              'beta_experiment/beta-10/sim-20180512-105824']
 '''
-loadfiles = ['sim-20191114-000009_server']
-os.chdir('D:\Masterarbeit_ausgelagert')
-
-plot_var = 'v'
-energy_model = True
-numAgents = 150
+loadfile = sys.argv[1]
+plot_var = sys.argv[2] #plot_var = 'v'
+loadfiles = [loadfile]#loadfiles = ['sim-20191114-000009_server']
+iter_list = detect_all_isings(loadfile) #  iter_list = np.arange(0, 2000, 1)
+settings = load_settings(loadfile)
+energy_model = settings['energy_model']
+numAgents = settings['pop_size']
 autoLoad = True
 saveFigBool = True
 fixGen2000 = False
 
-# loadfiles = ['beta_experiment/beta-0-1/sim-20180512-105719',
-#              'beta_experiment/beta-0-1/sim-20180512-105725',
-#              'beta_experiment/beta-1/sim-20180511-163319',
-#              'beta_experiment/beta-1/sim-20180511-163335',
-#              'beta_experiment/beta-1/sim-20180511-163347',
-#              'beta_experiment/beta-1/sim-20180511-163357',
-#              'beta_experiment/beta-10/sim-20180512-105824',
-#              'beta_experiment/beta-10/sim-20180512-105819']
-
-# IC = [0, 0, 1, 1, 1, 1, 2, 2]
 new_order = [2, 0, 1]
 
 labels = [r'$\beta_i = 0.1$', r'$\beta_i = 1$', r'$\_i = 10$']
-iter_list = np.arange(0, 2000, 1)
+
 cmap = plt.get_cmap('seismic')
 norm = colors.Normalize(vmin=0, vmax=len(loadfiles))  # age/color mapping
 # norm = [[194, 48, 32, 255],
