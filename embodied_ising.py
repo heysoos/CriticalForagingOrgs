@@ -67,7 +67,7 @@ class ising:
         # self.r = uniform(0, 360)  # orientation   [0, 360]
         # self.v = uniform(0, settings['v_max']/3)  # velocity      [0, v_max]
         # self.dv = uniform(-settings['dv_max'], settings['dv_max'])  # dv
-        self.v = 0.0
+
 
         self.dx = 0
         self.dy = 0
@@ -114,6 +114,7 @@ class ising:
         self.avg_energy = 0
         self.all_velocity = 0
         self.avg_velocity = 0
+        self.v = 0.0
 
 
         self.assign_critical_values(settings)
@@ -155,6 +156,9 @@ class ising:
         self.s[2] = np.tanh(random_dorg) * 2 - 1
 
     def randomize_position(self, settings):
+        '''
+        Only used in TimeEvolve2
+        '''
         self.xpos = uniform(settings['x_min'], settings['x_max'])  # position (x)
         self.ypos = uniform(settings['y_min'], settings['y_max'])  # position (y)
 
@@ -173,7 +177,7 @@ class ising:
             
         else:
             self.r = np.random.rand() * 360 
-            self.v = np.random.rand() * settings['v_max']
+            self.v = np.random.rand() * settings['v_max'] #TODO: This cannot work with huge v_max
             self.dv = np.random.rand() * settings['dv_max']
             self.dx = self.v * cos(radians(self.r)) * settings['dt']
             self.dy = self.v * sin(radians(self.r)) * settings['dt']
@@ -206,6 +210,7 @@ class ising:
 
         # UPDATE VELOCITY - Motor neuron s.[-self.Msize1:]
         self.v += (np.sum(self.s[-self.Msize1:]) / 2) * settings['dv_max'] * settings['dt']
+        # TODO: Negative values for velocity????
 
         if self.v < 0:
             self.v = 0
