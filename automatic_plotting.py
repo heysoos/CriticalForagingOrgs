@@ -12,7 +12,7 @@ def automatic_plot(sim_name):
         #os.system("python plot__anything_combined {} fitness".format(sim_name))
         plot_anything_combined.main(sim_name, 'fitness')
     plot_anything_combined.main(sim_name, 'Beta')
-    plot_anything_combined.main(sim_name, 'v')
+    plot_anything_combined.main(sim_name, 'avg_velocity')
 
 if __name__=='__main__':
     sim_name = 'sim-20200103-170627-ser_-f_40_-s_-b_10_-ie_2_-a_0_200_500_1000_1999'

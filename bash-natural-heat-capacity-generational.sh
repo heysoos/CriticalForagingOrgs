@@ -12,6 +12,7 @@ gens=(save/$sim/isings/*)
 
 parallel --bar --eta -j14 "python3 compute-natural-heat-capacity-generational $sim {1} {2}" ::: \
 $(seq 101) ::: \
-0 1000 1999 3000 3999
+0 500 100 1500 1999
+#0 1000 1999 3000 3999
 
 # parallel --bar 'python3 compute-heat-capacity {1}' ::: $(seq 101)
