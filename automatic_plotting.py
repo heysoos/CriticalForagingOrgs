@@ -3,9 +3,10 @@ from automatic_plot_helper import load_settings
 from automatic_plot_helper import load_isings
 import plot_anything_combined
 
-def main(sim_name):
+def main(sim_name, load_isings_list=True):
     settings = load_settings(sim_name)
-    isings_list = load_isings(sim_name)
+    if load_isings_list:
+        isings_list = load_isings(sim_name)
     plot_anything_auto(sim_name, ['Beta', 'avg_velocity'], settings, isings_list = isings_list, autoLoad=False)
 
 
@@ -24,6 +25,7 @@ def plot_anything_auto(sim_name, plot_vars, settings, isings_list = None, autoLo
 
     for plot_var in plot_vars:
         plot_anything_combined.main(sim_name, plot_var, isings_list = isings_list, autoLoad = autoLoad)
+
 
 if __name__ == '__main__':
     sim_name = 'sim-20200103-170627-ser_-f_40_-s_-b_10_-ie_2_-a_0_200_500_1000_1999'
