@@ -18,7 +18,7 @@ loadfiles = ['beta_experiment/beta-0-1/sim-20180512-105719',
              'beta_experiment/beta-1/sim-20180511-163319',
              'beta_experiment/beta-10/sim-20180512-105824']
 '''
-def main(loadfile, plot_var):
+def main(loadfile, plot_var, isings_list = None, autoLoad = True):
 
 
     loadfiles = [loadfile]#loadfiles = ['sim-20191114-000009_server']
@@ -26,7 +26,7 @@ def main(loadfile, plot_var):
     settings = load_settings(loadfile)
     energy_model = settings['energy_model']
     numAgents = settings['pop_size']
-    autoLoad = True
+    #autoLoad = True
     saveFigBool = True
     fixGen2000 = False
 
@@ -46,7 +46,7 @@ def main(loadfile, plot_var):
     ###########################
     FOODS = []
     for loadfile in loadfiles:
-        f = fitness(loadfile, iter_list, numAgents, autoLoad, saveFigBool, plot_var)
+        f = fitness(loadfile, iter_list, isings_list, numAgents, autoLoad, saveFigBool, plot_var)
         # FIX THE DOUBLE COUNTING PROBLEM
         if f.shape[0] > 2000 and fixGen2000:
             print('Fixing Double Counting at Gen 2000')
@@ -146,7 +146,7 @@ def upper_tri_masking(A):
     mask = r[:, None] < r
     return A[mask]
 
-def fitness(loadfile, iter_list, numAgents, autoLoad, saveFigBool, plot_var):
+def fitness(loadfile, iter_list, isings_list, numAgents, autoLoad, saveFigBool, plot_var):
 
     folder = 'save/' + loadfile
 
@@ -161,15 +161,27 @@ def fitness(loadfile, iter_list, numAgents, autoLoad, saveFigBool, plot_var):
     #     data = np.load(fname2)
     #     FOOD = data['FOOD']
     if path.isfile(fname2) and autoLoad:
+        #Loading previously saved files
         txt = 'Loading: ' + fname2
         print(txt)
         data = np.load(fname2)
         FOOD = data['FOOD']
+    elif not isings_list is None:
+        #Loading directly from isings_list in case it has been passed
+        FOOD = np.zeros((len(iter_list), numAgents))
+        for ii, isings in enumerate(isings_list):
+            food = []
+            for i, I in enumerate(isings):
+                exec('food.append(I.%s)' % plot_var)
+            FOOD[ii, :] = food
+        if not path.exists(folder2):
+            makedirs(folder2)
+        np.savez(fname2, FOOD=FOOD)
     else:
+        #Otherwise load file directly
         FOOD = np.zeros((len(iter_list), numAgents))
         for ii, iter in enumerate(iter_list):
             filename = 'save/' + loadfile + '/isings/gen[' + str(iter) + ']-isings.pickle'
-
             startstr = 'Loading simulation:' + filename
             print(startstr)
 
