@@ -110,7 +110,7 @@ class ising:
         self.fitness = 0
         self.energy = 0.0
         self.food = 0
-        self.energies = []
+        self.energies = [] #Allows for using median as well... Replace with adding parameter up for average in future to save memory? This array is deleted before saving to reduce file size
         self.avg_energy = 0
         self.all_velocity = 0
         self.avg_velocity = 0
