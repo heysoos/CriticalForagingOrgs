@@ -983,7 +983,7 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
             if settings['energy_model']:
                 fit_func_param_name = 'avg_energy'
             else:
-                fit_func_param_name = 'eat_ratre'
+                fit_func_param_name = 'eat_rate'
 
             if settings['mutateB']:
                 print('\n', count, '|', fit_func_param_name, eat_rate, 'mean_Beta', mBeta,
