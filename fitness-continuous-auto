@@ -56,7 +56,7 @@ def upper_tri_masking(A):
     mask = r[:, None] < r
     return A[mask]
 
-def fitness(loadfile, iter_list, numAgents, autoLoad, saveFigBool):
+def fitness(loadfile, iter_list, ising_list, numAgents, autoLoad, saveFigBool):
 
     folder = 'save/' + loadfile
 
@@ -70,6 +70,14 @@ def fitness(loadfile, iter_list, numAgents, autoLoad, saveFigBool):
         print(txt)
         data = np.load(fname2)
         FOOD = data['FOOD']
+    elif not ising_list is None:
+        FOOD = np.zeros((len(iter_list), numAgents))
+        for ii, isings in ising_list:
+            food = []
+            for i, I in isings:
+
+
+
     else:
         FOOD = np.zeros((len(iter_list), numAgents))
         for ii, iter in enumerate(iter_list):

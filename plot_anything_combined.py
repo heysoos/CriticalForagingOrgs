@@ -160,8 +160,11 @@ def fitness(loadfile, iter_list, numAgents, autoLoad, saveFigBool, plot_var):
     #     print(txt)
     #     data = np.load(fname2)
     #     FOOD = data['FOOD']
-    if False:
-        pass
+    if path.isfile(fname2) and autoLoad:
+        txt = 'Loading: ' + fname2
+        print(txt)
+        data = np.load(fname2)
+        FOOD = data['FOOD']
     else:
         FOOD = np.zeros((len(iter_list), numAgents))
         for ii, iter in enumerate(iter_list):
