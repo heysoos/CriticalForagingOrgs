@@ -28,6 +28,6 @@ def plot_anything_auto(sim_name, plot_vars, settings, isings_list = None, autoLo
 
 
 if __name__ == '__main__':
-    sim_name = 'sim-20200103-170627-ser_-f_40_-s_-b_10_-ie_2_-a_0_200_500_1000_1999'
+    sim_name = 'sim-20200103-170556-ser_-s_-b_1_-ie_2_-a_0_500_1000_1500_1999'
     main(sim_name)
 

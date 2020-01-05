@@ -244,9 +244,9 @@ if __name__ == '__main__':
 
     #loadfile = sys.argv[1]
     #plot_var = sys.argv[2] #plot_var = 'v'
-    loadfile = 'sim-20200103-170627-ser_-f_40_-s_-b_10_-ie_2_-a_0_200_500_1000_1999'
+    loadfile = 'sim-20200103-170556-ser_-s_-b_1_-ie_2_-a_0_500_1000_1500_1999'
     plot_var_x = 'avg_energy'
-    plot_var_y = 'avg_velocity'
+    plot_var_y = 'food'
     isings_list = load_isings(loadfile)
     main(loadfile, isings_list, plot_var_x, plot_var_y, autoLoad=False)
 
