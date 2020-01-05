@@ -23,6 +23,7 @@ def create_settings():
     settings['numKill'] = int(settings['pop_size'] / 1.66)
     settings['food_num'] = args.food_num #100  # number of food particles
     settings['food_radius'] = 0.03
+    settings['food_energy'] = args.food_energy
     settings['org_radius'] = 0.05
     settings['ANN'] = False  # Use ANN or Ising?
     settings['BoidOn'] = False  # Only use Boid model? #True
@@ -88,8 +89,8 @@ def create_settings():
     settings['parallel_computing'] = False #BOO
     settings['cores'] = 4 #INT if 0 number is determined automatically
     
-    settings['energy_model'] = True #BOO
-    settings['v_min'] = 0.05  # FLOAT [0,1)
+    settings['energy_model'] = not args.no_ener_mod #BOO
+    settings['v_min'] = args.v_min  # FLOAT [0,1)
     settings['cost_speed'] = args.cost_speed  # FLOAT [0,1] energy cost of speed as a factor of speed #default 0.05
     settings['initial_energy'] = args.init_energy  # Energy that each organism starts with in each simulation
 
@@ -109,7 +110,8 @@ def parse():
                                      ------Default values-----
                                      save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps=20,
                         loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False,
-                        server_mode = False, cost_speed=0.05, v_max=999.0, sig_beta=0.02, no_mut_beta=False
+                        server_mode = False, cost_speed=0.05, v_max=999.0, sig_beta=0.02, no_mut_beta=False, 
+                        init_energy=0, food_energy=1
                                      ''')
     parser.add_argument('-p', '--pop', dest='pop_size', type=int, help='Number of individuals in each generation')
     parser.add_argument('-f','--food', dest='num_food', type=int,
@@ -141,11 +143,21 @@ def parse():
                         help='FLOAT [0,1] energy cost of speed as a factor of speed')
     parser.add_argument('-ie', '--init_en', dest='init_energy', type=float,
                         help='initial energy at beginning of each generation in energy model')
-    parser.add_argument('-vm', '--v_max', dest='v_max', type=float, help='Max speed of agends')
+    parser.add_argument('-fe', '--food_energy', type=float, dest ='food_energy',
+                        help='Amount of energy, that individual gets from eating food particle')
+    parser.add_argument('-vma', '--v_max', dest='v_max', type=float, help='Max speed of agends')
+    parser.add_argument('-vmi', '--v_min', dest='v_min', type=float,
+                        help='''Min speed of agends. Up until this speed agends do not use energy for movement when 
+                        energy model is switched on''')
+    parser.add_argument('-n', '--name', dest='savename', help='Optional name for the folder')
+    parser.add_argument('-ne', '--no_energy', dest='no_ener_mod', action='store_true',
+                        help='Switch off energy model and instead optimize for maximal number of foods eaten')
+    #-n does not do anything in the code as input arguments already define name of folder. Practical nonetheless.
 
     parser.set_defaults(save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps=20,
                         loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False,
-                        server_mode = False, cost_speed=0.05, v_max=999.0, sig_beta=0.02, no_mut_beta=False, init_energy=0)
+                        server_mode = False, cost_speed=0.05, v_max=999.0, v_min=0.05, sig_beta=0.02, no_mut_beta=False,
+                        init_energy=0, food_energy=1, no_ener_mod=False)
     args = parser.parse_args()
     return args
 

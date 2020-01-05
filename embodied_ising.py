@@ -529,12 +529,12 @@ class food():
     def __init__(self, settings):
         self.xpos = uniform(settings['x_min'], settings['x_max'])
         self.ypos = uniform(settings['y_min'], settings['y_max'])
-        self.energy = 1
+        self.energy = settings['food_energy']
 
     def respawn(self, settings):
         self.xpos = uniform(settings['x_min'], settings['x_max'])
         self.ypos = uniform(settings['y_min'], settings['y_max'])
-        self.energy = 1
+        self.energy = settings['food_energy']
 
 # ------------------------------------------------------------------------------+
 # ------------------------------------------------------------------------------+
