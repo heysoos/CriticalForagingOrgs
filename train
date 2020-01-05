@@ -110,8 +110,8 @@ def parse():
                                      ------Default values-----
                                      save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps=20,
                         loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False,
-                        server_mode = False, cost_speed=0.05, v_max=999.0, sig_beta=0.02, no_mut_beta=False, 
-                        init_energy=0, food_energy=1
+                        server_mode = False, cost_speed=0.05, v_max=999.0, v_min=0.05, sig_beta=0.02, no_mut_beta=False,
+                        init_energy=0, food_energy=1, no_ener_mod=False
                                      ''')
     parser.add_argument('-p', '--pop', dest='pop_size', type=int, help='Number of individuals in each generation')
     parser.add_argument('-f','--food', dest='num_food', type=int,
@@ -130,7 +130,7 @@ def parse():
     parser.add_argument('-nmb', '--nomutb', dest='no_mut_beta', action='store_true', help='Switch off beta mutation')
     parser.add_argument('-a', '--ani', nargs='+', required=False, dest = 'plot_gens', type=int
                         , help='''Generations of which animation shall be created. 
-                        Expects blank separated list of ints. Do not plot two subsequent generations''')
+                        Expects blank separated list of ints.''')
     parser.add_argument('-fps', type=int, dest='fps', help='FPS in animation')
     parser.add_argument('-l','--load', type=str, dest = 'loadfile',
                         help='Filename of previously saved simulation in save folder. Specify iteration using -li')
@@ -145,13 +145,14 @@ def parse():
                         help='initial energy at beginning of each generation in energy model')
     parser.add_argument('-fe', '--food_energy', type=float, dest ='food_energy',
                         help='Amount of energy, that individual gets from eating food particle')
+    parser.add_argument('-ne', '--no_energy', dest='no_ener_mod', action='store_true',
+                        help='Switch off energy model and instead optimize for maximal number of foods eaten')
     parser.add_argument('-vma', '--v_max', dest='v_max', type=float, help='Max speed of agends')
     parser.add_argument('-vmi', '--v_min', dest='v_min', type=float,
                         help='''Min speed of agends. Up until this speed agends do not use energy for movement when 
                         energy model is switched on''')
     parser.add_argument('-n', '--name', dest='savename', help='Optional name for the folder')
-    parser.add_argument('-ne', '--no_energy', dest='no_ener_mod', action='store_true',
-                        help='Switch off energy model and instead optimize for maximal number of foods eaten')
+
     #-n does not do anything in the code as input arguments already define name of folder. Practical nonetheless.
 
     parser.set_defaults(save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps=20,

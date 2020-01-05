@@ -997,7 +997,10 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
                     isings_copy = deepcopy(isings)
                     for I in isings_copy:
                         I.energies = []
-                save_sim(folder, isings_copy, fitness_stat, mutationrate, fitC, fitm, rep)
+
+                    save_sim(folder, isings_copy, fitness_stat, mutationrate, fitC, fitm, rep)
+                else:
+                    save_sim(folder, isings, fitness_stat, mutationrate, fitC, fitm, rep)
 
         count += 1
 
