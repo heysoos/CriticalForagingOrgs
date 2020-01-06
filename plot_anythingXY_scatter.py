@@ -50,6 +50,7 @@ def main(loadfile, isings_list, plot_var_x, plot_var_y, autoLoad = True):
     plt.figure()
     for gen, (x_pars, y_pars) in enumerate(zip(x_pars_list, y_pars_list)):
         ax = plt.scatter(x_pars, y_pars, s = 0.8, alpha = 0.13)
+        #TODO:colour acc to generation!!
     plt.xlabel('{}'.format(plot_var_x))
     plt.ylabel('{}'.format(plot_var_y))
 
