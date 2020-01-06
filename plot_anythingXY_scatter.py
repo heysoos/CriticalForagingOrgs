@@ -49,7 +49,9 @@ def main(loadfile, isings_list, plot_var_x, plot_var_y, autoLoad = True):
     #fig, ax = plt.subplots()
     plt.figure()
     for gen, (x_pars, y_pars) in enumerate(zip(x_pars_list, y_pars_list)):
-        ax = plt.scatter(x_pars, y_pars)
+        ax = plt.scatter(x_pars, y_pars, s = 0.8, alpha = 0.13)
+    plt.xlabel('{}'.format(plot_var_x))
+    plt.ylabel('{}'.format(plot_var_y))
 
     folder = 'save/' + loadfile
     savefolder = folder + '/figs/' + plot_var_x + '_vs_' + plot_var_y + '_line/'
@@ -60,8 +62,7 @@ def main(loadfile, isings_list, plot_var_x, plot_var_y, autoLoad = True):
 
     if saveFigBool:
         plt.savefig(savefilename, bbox_inches='tight', dpi=300)
-    plt.xlabel('{}'.format(plot_var_x))
-    plt.ylabel('{}'.format(plot_var_y))
+
     plt.show()
 
 
@@ -245,8 +246,9 @@ if __name__ == '__main__':
     #loadfile = sys.argv[1]
     #plot_var = sys.argv[2] #plot_var = 'v'
     loadfile = 'sim-20200103-170556-ser_-s_-b_1_-ie_2_-a_0_500_1000_1500_1999'
-    plot_var_x = 'avg_energy'
-    plot_var_y = 'food'
+    plot_var_x = 'Beta'
+    plot_var_y = 'avg_velocity'#'food'
     isings_list = load_isings(loadfile)
+
     main(loadfile, isings_list, plot_var_x, plot_var_y, autoLoad=False)
 
