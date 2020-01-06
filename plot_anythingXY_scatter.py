@@ -47,9 +47,12 @@ def main(loadfile, isings_list, plot_var_x, plot_var_y, autoLoad = True):
     x_pars_list, y_pars_list = fitness(loadfile, iter_list, isings_list, numAgents, autoLoad, saveFigBool, plot_var_x,
                                        plot_var_y)
     #fig, ax = plt.subplots()
+    cmap = plt.get_cmap('plasma')
+    norm = colors.Normalize(vmin=0, vmax=len(iter_list))
     plt.figure()
     for gen, (x_pars, y_pars) in enumerate(zip(x_pars_list, y_pars_list)):
-        ax = plt.scatter(x_pars, y_pars, s = 0.8, alpha = 0.13)
+        c = cmap(norm(gen))
+        ax = plt.scatter(x_pars, y_pars, s = 0.8, alpha = 0.13, c=c)
         #TODO:colour acc to generation!!
     plt.xlabel('{}'.format(plot_var_x))
     plt.ylabel('{}'.format(plot_var_y))
@@ -252,4 +255,5 @@ if __name__ == '__main__':
     isings_list = load_isings(loadfile)
 
     main(loadfile, isings_list, plot_var_x, plot_var_y, autoLoad=False)
+    #TODO: Evt. PCA oder decision trees um herauszufinden welche eigenschaften wichtig sind für hohe avg energy?
 
