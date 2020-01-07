@@ -19,12 +19,12 @@ loadfiles = ['beta_experiment/beta-0-1/sim-20180512-105719',
              'beta_experiment/beta-1/sim-20180511-163319',
              'beta_experiment/beta-10/sim-20180512-105824']
 '''
-def main(loadfile, isings_list, plot_var_x, plot_var_y, autoLoad = True):
+def main(loadfile, settings, isings_list, plot_var_x, plot_var_y, s = 0.8, alpha = 0.13, autoLoad = True, x_lim = None, y_lim = None):
 
 
     loadfiles = [loadfile]#loadfiles = ['sim-20191114-000009_server']
     iter_list = detect_all_isings(loadfile) #  iter_list = np.arange(0, 2000, 1)
-    settings = load_settings(loadfile)
+    #
     energy_model = settings['energy_model']
     numAgents = settings['pop_size']
     #autoLoad = True
@@ -49,13 +49,20 @@ def main(loadfile, isings_list, plot_var_x, plot_var_y, autoLoad = True):
     #fig, ax = plt.subplots()
     cmap = plt.get_cmap('plasma')
     norm = colors.Normalize(vmin=0, vmax=len(iter_list))
+    font = {'family': 'normal',
+            'weight': 'bold',
+            'size': 10}
+
+    plt.rc('font', **font)
     plt.figure()
     for gen, (x_pars, y_pars) in enumerate(zip(x_pars_list, y_pars_list)):
         c = cmap(norm(gen))
-        ax = plt.scatter(x_pars, y_pars, s = 0.8, alpha = 0.13, c=c)
+        ax = plt.scatter(x_pars, y_pars, s = s, alpha = alpha, c=c)
         #TODO:colour acc to generation!!
-    plt.xlabel('{}'.format(plot_var_x))
-    plt.ylabel('{}'.format(plot_var_y))
+    plt.xlim(x_lim)
+    plt.ylim(y_lim)
+    plt.xlabel('{}'.format(plot_var_x.replace('_', ' ')))
+    plt.ylabel('{}'.format(plot_var_y.replace('_', ' ')))
 
     folder = 'save/' + loadfile
     savefolder = folder + '/figs/' + plot_var_x + '_vs_' + plot_var_y + '_line/'
@@ -65,7 +72,7 @@ def main(loadfile, isings_list, plot_var_x, plot_var_y, autoLoad = True):
         makedirs(savefolder)
 
     if saveFigBool:
-        plt.savefig(savefilename, bbox_inches='tight', dpi=300)
+        plt.savefig(savefilename, bbox_inches='tight', dpi=500)
 
     plt.show()
 
@@ -250,10 +257,12 @@ if __name__ == '__main__':
     #loadfile = sys.argv[1]
     #plot_var = sys.argv[2] #plot_var = 'v'
     loadfile = 'sim-20200103-170556-ser_-s_-b_1_-ie_2_-a_0_500_1000_1500_1999'
-    plot_var_x = 'Beta'
+    plot_var_x = 'avg_energy'
     plot_var_y = 'avg_velocity'#'food'
     isings_list = load_isings(loadfile)
+    settings = load_settings(loadfile)
+    #TODO: add something that detetcts .npz file and skips loading isings in that case
 
-    main(loadfile, isings_list, plot_var_x, plot_var_y, autoLoad=False)
+    main(loadfile, settings, isings_list, plot_var_x, plot_var_y, autoLoad=False, x_lim=(-1,20), y_lim=(-0.1, 0.8), alpha = 0.05)
     #TODO: Evt. PCA oder decision trees um herauszufinden welche eigenschaften wichtig sind für hohe avg energy?
 
