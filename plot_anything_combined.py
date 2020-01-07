@@ -19,7 +19,7 @@ loadfiles = ['beta_experiment/beta-0-1/sim-20180512-105719',
              'beta_experiment/beta-10/sim-20180512-105824']
 '''
 def main(loadfiles, plot_var, isings_lists = None, autoLoad = True,
-         sim_labels = [r'$\beta_i = 0.1$', r'$\beta_i = 1$', r'$\_i = 10$']):
+         sim_labels = [r'$\beta_i = 0.1$', r'$\beta_i = 1$', r'$\beta_i = 10$']):
     '''
     Can either plot one or multiple simulations in a combined plot
     :param loadfile: save names of simulations; list of strings
@@ -84,10 +84,10 @@ def main(loadfiles, plot_var, isings_lists = None, autoLoad = True,
 
     for i, FOOD in enumerate(FOODS):
 
-        c = cmap(norm(new_order[i]))
+        c = cmap(norm(i))
 
         muF = np.mean(FOOD, axis=1)
-        ax.plot(iter_list, muF, color=c, label=labels[new_order[i]])
+        ax.plot(iter_list, muF, color=c, label=labels[i])
 
 
         sigmaF = FOOD.std(axis=1)
@@ -109,9 +109,9 @@ def main(loadfiles, plot_var, isings_lists = None, autoLoad = True,
 
 
     if multiple_sim:
-        savefolder = '/multi_sim_plots/'
+        savefolder = 'multi_sim_plots/'
         for loadfile in loadfiles:
-            savefolder += loadfile + '__'
+            savefolder += loadfile[0:18] + '__'
     else:
         folder = 'save/' + loadfile
         savefolder = folder + '/figs/' + plot_var + '_line/'
