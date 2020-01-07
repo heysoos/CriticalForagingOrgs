@@ -24,13 +24,13 @@ def plot_anything_auto(sim_name, plot_vars, settings, isings_list = None, autoLo
 
     if settings['energy_model']:
         #os.system("python plot__anything_combined {} avg_energy".format(sim_name))
-        plot_anything_combined.main(sim_name, 'avg_energy', isings_list = isings_list, autoLoad = autoLoad)
+        plot_anything_combined.main([sim_name], 'avg_energy', isings_lists=[isings_list], autoLoad=autoLoad)
     else:
         #os.system("python plot__anything_combined {} fitness".format(sim_name))
-        plot_anything_combined.main(sim_name, 'fitness', isings_list = isings_list, autoLoad = autoLoad)
+        plot_anything_combined.main([sim_name], 'fitness', isings_lists=[isings_list], autoLoad=autoLoad)
 
     for plot_var in plot_vars:
-        plot_anything_combined.main(sim_name, plot_var, isings_list = isings_list, autoLoad = autoLoad)
+        plot_anything_combined.main([sim_name], plot_var, isings_lists=[isings_list], autoLoad=autoLoad)
 
 
 

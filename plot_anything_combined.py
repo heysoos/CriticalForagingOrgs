@@ -18,21 +18,35 @@ loadfiles = ['beta_experiment/beta-0-1/sim-20180512-105719',
              'beta_experiment/beta-1/sim-20180511-163319',
              'beta_experiment/beta-10/sim-20180512-105824']
 '''
-def main(loadfile, plot_var, isings_list = None, autoLoad = True):
+def main(loadfiles, plot_var, isings_lists = None, autoLoad = True,
+         sim_labels = [r'$\beta_i = 0.1$', r'$\beta_i = 1$', r'$\_i = 10$']):
+    '''
+    Can either plot one or multiple simulations in a combined plot
+    :param loadfile: save names of simulations; list of strings
+    :param plot_var: isings attribute to ne plotted over generation
+    :param isings_lists: list of isings list (one isings list for each simulation to be plotted)
+    :param autoLoad: If previously plotted should npz file be loaded to speed up process?
+    :param sim_labels: Labels of simulation in plot in case multi_sim = True
+    '''
 
+    if type(loadfiles) == str:
+        loadfiles = [loadfiles]
+    if type(isings_lists) == str:
+        isings_lists == [isings_lists]
 
-    loadfiles = [loadfile]#loadfiles = ['sim-20191114-000009_server']
-    iter_list = detect_all_isings(loadfile) #  iter_list = np.arange(0, 2000, 1)
-    settings = load_settings(loadfile)
-    energy_model = settings['energy_model']
-    numAgents = settings['pop_size']
+    #loadfiles = [loadfile]#loadfiles = ['sim-20191114-000009_server']
+    #Boo shows whether there are multiple simulations in one plot
+    multiple_sim = len(loadfiles) > 1
+
+    #energy_model = settings['energy_model']
+
     #autoLoad = True
     saveFigBool = True
     fixGen2000 = False
 
     new_order = [2, 0, 1]
 
-    labels = [r'$\beta_i = 0.1$', r'$\beta_i = 1$', r'$\_i = 10$']
+    labels = sim_labels
 
     cmap = plt.get_cmap('seismic')
     norm = colors.Normalize(vmin=0, vmax=len(loadfiles))  # age/color mapping
@@ -41,7 +55,10 @@ def main(loadfile, plot_var, isings_list = None, autoLoad = True):
 
     ###########################
     FOODS = []
-    for loadfile in loadfiles:
+    for loadfile, isings_list in zip(loadfiles, isings_lists):
+        iter_list = detect_all_isings(loadfile)  # iter_list = np.arange(0, 2000, 1)
+        settings = load_settings(loadfile)
+        numAgents = settings['pop_size']
         f = fitness(loadfile, iter_list, isings_list, numAgents, autoLoad, saveFigBool, plot_var)
         # FIX THE DOUBLE COUNTING PROBLEM
         if f.shape[0] > 2000 and fixGen2000:
@@ -86,12 +103,20 @@ def main(loadfile, plot_var, isings_list = None, autoLoad = True):
                             markerfacecolor=cmap(norm(2)), markersize=15),]
 
     #Custom legend for multiple runs in one plot removed:
-    #ax.legend(custom_legend, [r'$\beta = 10$', r'$\beta = 1$', r'$\beta = 0.1$'], loc='upper left')
+    if multiple_sim:
+        ax.legend(custom_legend, sim_labels, loc='upper left')
+        #ax.legend(custom_legend, [r'$\beta = 10$', r'$\beta = 1$', r'$\beta = 0.1$'], loc='upper left')
 
 
+    if multiple_sim:
+        savefolder = '/multi_sim_plots/'
+        for loadfile in loadfiles:
+            savefolder += loadfile + '__'
+    else:
+        folder = 'save/' + loadfile
+        savefolder = folder + '/figs/' + plot_var + '_line/'
 
-    folder = 'save/' + loadfile
-    savefolder = folder + '/figs/' + plot_var + '_line/'
+
     savefilename = savefolder + plot_var + '_gen' + str(iter_list[0]) + '-' + str(iter_list[-1]) + '.png'
     if not path.exists(savefolder):
         makedirs(savefolder)

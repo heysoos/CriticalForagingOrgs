@@ -189,7 +189,7 @@ def fitness(loadfile, iter_list, isings_list, numAgents, autoLoad, saveFigBool, 
 
     folder = 'save/' + loadfile
 
-    folder2 = folder + '/figs/' + plot_var_x + '_vs_'+ plot_var_y + '_line/'
+    folder2 = folder + '/figs/' + plot_var_x + '_vs_'+ plot_var_y + '/'
     fname2 = folder2 + plot_var_x + '_vs_'+ plot_var_y + \
              str(iter_list[0]) + '-' + str(iter_list[1] - iter_list[0]) + '-' + str(iter_list[-1]) + \
              '.npz'
