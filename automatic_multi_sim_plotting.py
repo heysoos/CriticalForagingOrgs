@@ -32,7 +32,7 @@ def plot_anything_auto(sim_name, plot_vars, settings, isings_lists = None, autoL
 
 
 if __name__ == '__main__':
-    #Order for beta 0.1 1 1 10
+    #  Order for beta 0.1 1 1 10
     sim_names = [
                 'sim-20200103-170603-ser_-s_-b_0.1_-ie_2_-a_0_200_500_1000_1500_1999',
                 'sim-20200103-170556-ser_-s_-b_1_-ie_2_-a_0_500_1000_1500_1999',

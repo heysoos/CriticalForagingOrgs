@@ -20,6 +20,7 @@ loadfiles = ['beta_experiment/beta-0-1/sim-20180512-105719',
 '''
 def main(loadfiles, plot_var, isings_lists = None, autoLoad = True,
          sim_labels = [r'$\beta_i = 0.1$', r'$\beta_i = 1$', r'$\beta_i = 10$']):
+
     '''
     Can either plot one or multiple simulations in a combined plot
     :param loadfile: save names of simulations; list of strings
@@ -96,9 +97,9 @@ def main(loadfiles, plot_var, isings_lists = None, autoLoad = True,
                         )
 
     custom_legend = [Line2D([0], [0], marker='o', color='w',
-                            markerfacecolor=cmap(norm(1)), markersize=15),
-                     Line2D([0], [0], marker='o', color='w',
                             markerfacecolor=cmap(norm(0)), markersize=15),
+                     Line2D([0], [0], marker='o', color='w',
+                            markerfacecolor=cmap(norm(1)), markersize=15),
                      Line2D([0], [0], marker='o', color='w',
                             markerfacecolor=cmap(norm(2)), markersize=15),]
 
@@ -112,6 +113,7 @@ def main(loadfiles, plot_var, isings_lists = None, autoLoad = True,
         savefolder = 'multi_sim_plots/'
         for loadfile in loadfiles:
             savefolder += loadfile[0:18] + '__'
+        savefolder += '/'
     else:
         folder = 'save/' + loadfile
         savefolder = folder + '/figs/' + plot_var + '_line/'
