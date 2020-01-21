@@ -8,7 +8,7 @@ def main(sim_name, load_isings_list=True):
     settings = load_settings(sim_name)
     if load_isings_list:
         isings_list = load_isings(sim_name)
-    plot_anything_auto(sim_name, ['Beta', 'avg_velocity'], settings, isings_list = isings_list, autoLoad=False)
+    plot_anything_auto(sim_name, ['Beta', 'avg_velocity', 'food'], settings, isings_list = isings_list, autoLoad=False)
     plot_var_tuples = [('Beta', 'avg_velocity'), ('avg_energy', 'avg_velocity'), ('avg_energy', 'food')]
     plot_scatter_auto(sim_name, settings, plot_var_tuples, isings_list, autoLoad=False)
 
@@ -35,6 +35,6 @@ def plot_anything_auto(sim_name, plot_vars, settings, isings_list = None, autoLo
 
 
 if __name__ == '__main__':
-    sim_name = 'sim-20191229-191241-ser_-s_-b_10_-ie_2_-a_0_500_1000_2000' #'sim-20200103-170603-ser_-s_-b_0.1_-ie_2_-a_0_200_500_1000_1500_1999'#'sim-20200103-170556-ser_-s_-b_1_-ie_2_-a_0_500_1000_1500_1999'
+    sim_name = 'sim-20200120-004551-p_50_-t_2000_-g_4000_-a_3999_-ie_2_-ef_-sf_-zs_1_-l_sim-20200119-004608-p_50_-t_2000_-g_4000_-a_3999_-ie_2_-ef_-sf_-zs_1_-n_ANN_energy_is_fitness_Beta_foodshare_-li_3999'
     main(sim_name)
 

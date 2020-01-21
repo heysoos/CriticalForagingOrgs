@@ -25,7 +25,7 @@ def create_settings():
     settings['food_radius'] = 0.03
     settings['food_energy'] = args.food_energy
     settings['org_radius'] = 0.05
-    settings['ANN'] = False  # Use ANN or Ising?
+    settings['ANN'] = True  # Use ANN or Ising?
     settings['BoidOn'] = False  # Only use Boid model? #True
 
     settings['server_mode'] = args.server_mode
@@ -40,7 +40,6 @@ def create_settings():
     settings['evolution_rate'] = 1  # only with critical learning number of iterations to skip to kill/mate (gives more time to eat before evolution)
     
     settings['dt'] = 0.2  # kinetic time step      (dt)
-    settings['r_max'] = 720
     settings['dr_max'] = 90  # max rotational speed      (degrees per second)
     settings['v_max'] = args.v_max #999  # 0.5 max velocity              (units per second)
     settings['dv_max'] = 0.05  # max acceleration (+/-)    (units per second^2)
@@ -86,15 +85,22 @@ def create_settings():
     settings['years_per_iteration'] = 1 #INT amount of seasonal changes per iteration
     settings['min_food_winter'] = 0.5 #FLOAT [0,1]; relative decimation of food in winter
     
-    settings['parallel_computing'] = False #BOO
+    settings['parallel_computing'] = False  #BOO
     settings['cores'] = 4 #INT if 0 number is determined automatically
     
     settings['energy_model'] = not args.no_ener_mod #BOO
+    settings['energy_is_fitness'] = args.ener_isfit_mod
     settings['v_min'] = args.v_min  # FLOAT [0,1)
     settings['cost_speed'] = args.cost_speed  # FLOAT [0,1] energy cost of speed as a factor of speed #default 0.05
     settings['initial_energy'] = args.init_energy  # Energy that each organism starts with in each simulation
 
-    
+    # Zero-sum settings
+    settings['share_food'] = args.share_food_mod  # can food be shared
+    settings['share_param'] = 0.2  # how much is shared from original amount
+    settings['share_radius'] = settings['org_radius'] * 2  # how close do organisms have to be to get a share
+    settings['zerosum_param'] = args.zerosum  # [0, 1], if 0, the org that initially eats the food loses nothing, if 1,
+    # the game is zero sum and the org loses any food that is shared.
+
     Iterations = args.iterations
 
 
@@ -110,7 +116,7 @@ def parse():
                                      ------Default values-----
                                      save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps=20,
                         loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False,
-                        server_mode = False, cost_speed=0.05, v_max=999.0, v_min=0.05, sig_beta=0.02, no_mut_beta=False,
+                        server_mode=False, cost_speed=0.05, v_max=999.0, v_min=0.05, sig_beta=0.02, no_mut_beta=False,
                         init_energy=0, food_energy=1, no_ener_mod=False
                                      ''')
     parser.add_argument('-p', '--pop', dest='pop_size', type=int, help='Number of individuals in each generation')
@@ -134,7 +140,7 @@ def parse():
     parser.add_argument('-fps', type=int, dest='fps', help='FPS in animation')
     parser.add_argument('-l','--load', type=str, dest = 'loadfile',
                         help='Filename of previously saved simulation in save folder. Specify iteration using -li')
-    parser.add_argument('-li', '--loadi', type=int, dest='loaditer',
+    parser.add_argument('-li', '--loadi', type=str, dest='loaditer',
                         help='Iteration of previously saved simulation that is loaded. Only use in combination with -l')
     parser.add_argument('-ns', '--nseas', action='store_true', dest='no_seasons', help='Deactivates seasons')
     parser.add_argument('-ser', '--ser', action='store_true', dest='server_mode',
@@ -147,18 +153,30 @@ def parse():
                         help='Amount of energy, that individual gets from eating food particle')
     parser.add_argument('-ne', '--no_energy', dest='no_ener_mod', action='store_true',
                         help='Switch off energy model and instead optimize for maximal number of foods eaten')
+    parser.add_argument('-ef', '--energy_is_fitness', dest='ener_isfit_mod', action='store_true',
+                        help='Optimize for average energy.')
     parser.add_argument('-vma', '--v_max', dest='v_max', type=float, help='Max speed of agends')
     parser.add_argument('-vmi', '--v_min', dest='v_min', type=float,
                         help='''Min speed of agends. Up until this speed agends do not use energy for movement when 
                         energy model is switched on''')
+    parser.add_argument('-sf', '--share_food', dest='share_food_mod', action='store_true',
+                        help='''Share food with other organisms in a small radius.''')
+    parser.add_argument('-zs', '--zerosum', dest='zerosum', type=float,
+                        help='''Zero-sum game or not. Takes values between 0 and 1, 1 being zero-sum.''')
     parser.add_argument('-n', '--name', dest='savename', help='Optional name for the folder')
 
     #-n does not do anything in the code as input arguments already define name of folder. Practical nonetheless.
 
-    parser.set_defaults(save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps=20,
-                        loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False,
-                        server_mode = False, cost_speed=0.05, v_max=999.0, v_min=0.05, sig_beta=0.02, no_mut_beta=False,
-                        init_energy=0, food_energy=1, no_ener_mod=False)
+    parser.set_defaults(save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps=30,
+                        loadfile='', loaditer=2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=True,
+                        server_mode=False, cost_speed=0.05, v_max=999.0, v_min=0.05, sig_beta=0.02, no_mut_beta=False,
+                        init_energy=0, food_energy=1, no_ener_mod=False, ener_isfit_mod=False, share_food_mod=False,
+                        zerosum=1)
+
+    # parser.set_defaults(save_data=True, plot=False, iterations=1, time_steps=2000, plot_gens=[], fps=20,
+    #                     loadfile='', loaditer=2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False,
+    #                     server_mode=False, cost_speed=0.05, v_max=999.0, v_min=0.05, sig_beta=0.02, no_mut_beta=False,
+    #                     init_energy=0, food_energy=1, no_ener_mod=False)
     args = parser.parse_args()
     return args
 

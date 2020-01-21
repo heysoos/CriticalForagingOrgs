@@ -2,8 +2,8 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as mpl
-mpl.use('Agg') #For server use
+# import matplotlib as mpl
+# mpl.use('Agg') #For server use
 from matplotlib import colors
 from matplotlib.lines import Line2D
 from matplotlib.patches import Circle
@@ -88,13 +88,14 @@ def main(loadfiles, plot_var, isings_lists = None, autoLoad = True,
         c = cmap(norm(i))
 
         muF = np.mean(FOOD, axis=1)
-        ax.plot(iter_list, muF, color=c, label=labels[i])
+        # ax.plot(iter_list, muF, color=c, label=labels[i])
+        ax.scatter(iter_list, muF, color=c, label=labels[i], alpha=0.15)
 
 
         sigmaF = FOOD.std(axis=1)
-        ax.fill_between(iter_list, muF + sigmaF, muF - sigmaF,
-                        color=c, alpha=a
-                        )
+        # ax.fill_between(iter_list, muF + sigmaF, muF - sigmaF,
+        #                 color=c, alpha=a
+        #                 )
 
     custom_legend = [Line2D([0], [0], marker='o', color='w',
                             markerfacecolor=cmap(norm(0)), markersize=15),

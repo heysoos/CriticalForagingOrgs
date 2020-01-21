@@ -4,34 +4,36 @@ from embodied_ising import ising
 import numpy as np
 from sys import argv
 from os import path, makedirs
+from automatic_plot_helper import load_settings
 
 import pickle
 
-loadfile = 'learn_only'
-gen = 0
+# --- COMPUTE MOTOR RESPONSE -------------------------------------------------------+
 
-def random_senses():
+if len(argv) < 5:
+    print("Usage: " + argv[0] + "<sim>" + "<sensInd>" + "<sensor>" + "<gen>")
+    exit(1)
+
+loadfile = str(argv[1])
+sensInd = int(argv[2])
+sensor = int(argv[3])
+gen = int(argv[4])
+
+def random_senses(sensor):
     # r_food = np.random.uniform(-180, 180)
     # org_sens = np.random.uniform(0, 1)
     # I.s[0] = r_food / 180
     # I.s[2] = np.tanh(org_sens) * 2 - 1
 
-    I.s[1] = np.random.uniform(-1, 1)
-    I.s[2] = np.random.uniform(-1, 1)
+    # I.s[1] = np.random.uniform(-1, 1)
+    # I.s[2] = np.random.uniform(-1, 1)
 
+    for i in range(0, 3):  # 3 sensors
+        if i != sensor:
+            I.s[i] = np.random.uniform(-1, 1)
 
-# --- COMPUTE MOTOR RESPONSE -------------------------------------------------------+
-
-if len(argv) < 2:
-    print("Usage: " + argv[0] + "<sensInd>")
-    exit(1)
-
-sensInd = int(argv[1])
-
-# sensInd = 0
-
-
-R = 1
+T = 2000
+R = 5
 Nsens = 100
 mode = 'MonteCarlo'
 sens = np.linspace(-1, 1, Nsens)
@@ -42,6 +44,7 @@ startstr = 'Loading simulation:' + loadfile
 print(startstr)
 
 isings = pickle.load(open(filename, 'rb'))
+settings = load_settings(loadfile)
 numAgents = len(isings)
 
 #  motor-dv, motor-dr, susc-motor-dv, susc-motor-dr
@@ -60,37 +63,44 @@ for rep in range(R):
         Mr = 0
         M2v = 0
         M2r = 0
-        T = 1000
 
         I.randomize_state()
-        random_senses()
-        I.s[0] = sens[sensInd]  # the sensor to hold constant
+        random_senses(sensor)
+        I.s[sensor] = sens[sensInd]  # the sensor to hold constant
 
         for t in range(int(T / 10)):
-            random_senses()
+            random_senses(sensor)
             I.NoSensorGlauberStep()  # sensor values dont update
 
         for t in range(T):
-            random_senses()
-            I.NoSensorGlauberStep()
-            # -1, 0, 1 for brake, nothing, accelerate
-            dv = (np.sum(I.s[-I.Msize1:]) / 2)
-            dr = (np.sum(I.s[-I.Msize:-I.Msize1]) / 2)
+            random_senses(sensor)
 
-            Mv += dv / float(T)  # dv
-            Mr += dr / float(T)  # dr
+            if settings['ANN']:
+                # update all other neurons a bunch of times
+                for j in range(int(settings['thermalTime'])):
+                    I.ANNStep()
+            else:
+                I.NoSensorGlauberStep()
+
+            # -1, 0, 1 for brake, nothing, accelerate
+            # dv = (np.sum(I.s[-I.Msize1:]) / 2)
+            # dr = (np.sum(I.s[-I.Msize:-I.Msize1]) / 2)
+            I.updateAcceleration(settings)
+
+            Mv += I.dv / float(T)  # dv
+            Mr += I.dr / float(T)  # dr
 
             # print(I.s[:3])
 
-            M2v += dv ** 2 / float(T)
-            M2r += dr ** 2 / float(T)
+            M2v += I.dv ** 2 / float(T)
+            M2r += I.dr ** 2 / float(T)
 
         data['MV'][rep, agentNum] = Mv
         data['MR'][rep, agentNum] = Mr
         data['CMV'][rep, agentNum] = (M2v - Mv ** 2)
         data['CMR'][rep, agentNum] = (M2r - Mr**2)
 
-folder = 'save/' + loadfile + '/Motor_Response/gen_' + str(gen) + '/'
+folder = 'save/' + loadfile + '/Motor_Response/gen_' + str(gen) + '/'  + str(sensor) + '/'
 file = 'MR-' + 'Nsens_' + str(Nsens) + \
        '-sensInd_' + str(sensInd) + \
        '-gen_' + str(gen) + \

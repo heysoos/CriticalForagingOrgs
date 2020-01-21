@@ -3,9 +3,9 @@
 import plotting
 import numpy as np
 import operator
-from itertools import combinations
-import matplotlib as mpl
-mpl.use('Agg')
+from itertools import combinations, product
+# import matplotlib as mpl
+# mpl.use('Agg')
 import matplotlib.pyplot as plt
 import copy
 
@@ -27,7 +27,7 @@ import os
 import pickle
 import time
 #import random
-
+from tqdm import tqdm
 
 
 # ------------------------------------------------------------------------------+
@@ -200,16 +200,21 @@ class ising:
                 if i < j and (i >= self.Ssize or j >= self.Ssize):
                     self.J[i, j] = (np.random.rand(1) * 2 - 1) * self.max_weights
 
-    def Move(self, settings):
+    def updateAcceleration(self, settings):
+        self.dr = (np.sum(self.s[-self.Msize:-self.Msize1]) / 2)
+        self.dv = (np.sum(self.s[-self.Msize1:]) / 2)
 
-        # print(self.s[-2:])
-        # TODO: velocity coeffecient that can be mutated?
-        # UPDATE HEADING - Motor neuron s.[-self.Msize:self.Msize1]
-        self.r += (np.sum(self.s[-self.Msize:-self.Msize1]) / 2) * settings['dr_max'] * settings['dt']
+    def updateVelocity(self, settings):
+
+        self.updateAcceleration(settings)
+        self.dr = self.dr * settings['dr_max'] * settings['dt']
+        self.dv = self.dv * settings['dv_max'] * settings['dt']
+
+        self.r += self.dr
         self.r = self.r % 360
 
         # UPDATE VELOCITY - Motor neuron s.[-self.Msize1:]
-        self.v += (np.sum(self.s[-self.Msize1:]) / 2) * settings['dv_max'] * settings['dt']
+        self.v += self.dv
         # TODO: Negative values for velocity????
 
         if self.v < 0:
@@ -218,34 +223,56 @@ class ising:
         if self.v > settings['v_max']:
             self.v = settings['v_max']
 
-        if self.r > settings['r_max']:
-            self.r = settings['r_max']
-
         if settings['energy_model']:
-
-
             if self.energy >= (self.v * settings['cost_speed']) and self.v > settings['v_min']:
-                #if agend has enough energy and wants to go faster than min speed
-                self.energy -= self.v * settings['cost_speed']
+                #if agent has enough energy and wants to go faster than min speed
+                self.energy -= (self.v + self.dr) * settings['cost_speed']
             elif self.v > settings['v_min']:
-                #if agned wants to go faster than min speed but does not have energy
+                #if agent wants to go faster than min speed but does not have energy
                 self.v = settings['v_min']
             self.all_velocity += self.v
 
-        # print('Velocity: ' + str(self.v) +  str(self.s[-1]))
+    def Move(self, settings):
+        # # print(self.s[-2:])
+        # # TODO: velocity coeffecient that can be mutated?
+        # # UPDATE HEADING - Motor neuron s.[-self.Msize:self.Msize1]
+        # self.dr = (np.sum(self.s[-self.Msize:-self.Msize1]) / 2) * settings['dr_max'] * settings['dt']
+        # self.r += self.dr
+        # self.r = self.r % 360
+        #
+        # # UPDATE VELOCITY - Motor neuron s.[-self.Msize1:]
+        # self.v += (np.sum(self.s[-self.Msize1:]) / 2) * settings['dv_max'] * settings['dt']
+        # # TODO: Negative values for velocity????
+        #
+        # if self.v < 0:
+        #     self.v = 0
+        #
+        # if self.v > settings['v_max']:
+        #     self.v = settings['v_max']
+        #
+        #
+        # if settings['energy_model']:
+        #     if self.energy >= (self.v * settings['cost_speed']) and self.v > settings['v_min']:
+        #         #if agend has enough energy and wants to go faster than min speed
+        #         self.energy -= (self.v + self.dr) * settings['cost_speed']
+        #     elif self.v > settings['v_min']:
+        #         #if agned wants to go faster than min speed but does not have energy
+        #         self.v = settings['v_min']
+        #     self.all_velocity += self.v
+        #
+        # # print('Velocity: ' + str(self.v) +  str(self.s[-1]))
+        self.updateVelocity(settings)
 
         # UPDATE POSITION
         self.dx = self.v * cos(radians(self.r)) * settings['dt']
         self.dy = self.v * sin(radians(self.r)) * settings['dt']
         self.xpos += self.dx
         self.ypos += self.dy
+        # print(self.dx, self.dy)
 
-        # torus boundary conditions
-        if abs(self.xpos) > settings['x_max']:
-            self.xpos = -self.xpos
-
-        if abs(self.ypos) > settings['y_max']:
-            self.ypos = -self.ypos
+        # periodic boundary conditions.
+        self.xpos = (self.xpos + settings['x_max']) % settings['x_max']
+        self.ypos = (self.ypos + settings['y_max']) % settings['y_max']
 
     def UpdateSensors(self, settings):
         # self.s[0] = sigmoid(self.r_food / 180)
@@ -298,7 +325,7 @@ class ising:
         Jm = Jhm[:, -self.Msize:]  # inputs to motor neurons
 
         # activate and update
-        new_h = af(np.dot(self.s, Jh))
+        new_h = af(self.Beta*np.dot(self.s, Jh))
         self.s[self.Ssize:-self.Msize] = new_h
 
         new_m = af(np.dot(self.s, Jm))
@@ -439,7 +466,11 @@ class ising:
 
     # mutate the connectivity matrix of an organism by stochastically adding/removing an edge
     def mutate(self, settings):
-        # ADDS/REMOVES RANDOM EDGE DEPENDING ON SPARSITY SETTING, RANDOMLY MUTATES ANOTHER RANDOM EDGE
+        '''
+        Adds/removes a random edge depending on sparsity setting and randomly mutates another random edge
+
+        :param:  settings
+        '''
 
         # expected number of disconnected edges
         numDisconnectedEdges = len(list(combinations(range(settings['numDisconnectedNeurons']), 2)))
@@ -452,7 +483,9 @@ class ising:
         np.fill_diagonal(disconnected, 0)
         disconnected = np.triu(disconnected)
 
-        # things that need to be connected and not flagged to change
+        # keep sensors connected to hidden neurons
+        # TODO: allow the sensors to disconnect to some hidden neurons.
+        #   Make sure minimum of 1 connection is made
         connected[0:self.Ssize, :] = 0
         connected[:, -self.Msize:] = 0
         # things that need to be disconnected and not flagged to change
@@ -512,7 +545,9 @@ class ising:
                 ii = i[randindex]
                 jj = j[randindex]
 
-                self.J[ii, jj] = np.random.uniform(-1, 1) * self.max_weights
+                # self.J[ii, jj] = np.random.uniform(-1, 1) * self.max_weights
+                self.J[ii, jj] = np.clip(self.J[ii, jj] * np.random.normal(),
+                                         -self.max_weights, self.max_weights)
 
         # MUTATE RANDOM EDGE
         i, j = np.nonzero(self.maskJ)
@@ -521,7 +556,9 @@ class ising:
         ii = i[randindex]
         jj = j[randindex]
 
-        self.J[ii, jj] = np.random.uniform(-1, 1) * self.max_weights
+        # self.J[ii, jj] = np.random.uniform(-1, 1) * self.max_weights
+        self.J[ii, jj] = np.clip(self.J[ii, jj] * np.random.normal(),
+                                 -self.max_weights, self.max_weights)
         #Mutation of weights--> mutated weight is generated randomly from scratch
 
         # MUTATE LOCAL TEMPERATURE
@@ -551,6 +588,76 @@ class food():
 def dist(x1, y1, x2, y2):
     return sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
+def pdistance_pairwise(x0, x1, dimensions, food=False):
+    '''
+    Parameters
+    ----------
+    x0, x1:
+        (vectorized) list of coordinates. Can be N-dimensional. e.g. x0 = [[0.5, 2.], [1.1, 3.8]].
+
+    dimensions:
+        size of the bounding box, array of length N. e.g. [8., 8.], [xmax - xmin, ymax - ymin].
+
+    food:
+        boolean signifying if the distance calculations are between organisms or between organisms and food. In the
+        latter case we don't need to compare it both ways around, in the former, theta_mat is a non-symmetric matrix.
+
+    Returns
+    -------
+
+    dist_mat:
+        upper triangle matrix of pairwise distances accounting for periodic boundaries
+
+    theta_mat:
+        full matrix of angles between each position accounting for periodic boundaries
+    '''
+
+
+    # get all unique pairs combinations
+    N1 = len(x0)
+    N2 = len(x1)
+
+    if food:
+        combo_index = list(product(np.arange(N1), np.arange(N2)))
+    else:
+        if not len(x0) == len(x1):
+            raise Exception('x0.shape[0] not equal to x1.shape[0] when comparing organisms.')
+        combo_index = list(combinations(np.arange(N1), 2))
+
+
+    Ii = np.array([x0[i[0]] for i in combo_index])
+    Ij = np.array([x1[i[1]] for i in combo_index])
+
+    # calculate distances accounting for periodic boundaries
+    # delta = np.abs(Ipostiled_seq - Ipostiled)
+    delta = Ij - Ii
+    delta = np.where(np.abs(delta) > 0.5 * dimensions, delta - np.sign(delta)*dimensions, delta)
+
+    dist_vec = np.sqrt((delta ** 2).sum(axis=-1))
+    theta_vec_ij = np.degrees(np.arctan2(delta[:, 1], delta[:, 0]))  # from org i to org j
+    if not food:
+        theta_vec_ji = np.degrees(np.arctan2(-delta[:, 1], -delta[:, 0])) # from org j to org i
+
+    if food:
+        dist_mat = dist_vec.reshape(N1, N2)
+    else:
+        dist_mat = np.zeros((N1, N2))
+    theta_mat = np.zeros((N1, N2))
+
+    for ii, ind in enumerate(combo_index):
+        i = ind[0]
+        j = ind[1]
+        # can leave this as upper triangle since it's symmetric
+        if not food:
+            dist_mat[i, j] = dist_vec[ii]
+        # need to get a full matrix since eventually these angles are not symmetric
+        theta_mat[i, j] = theta_vec_ij[ii]
+        # if comparing org-to-org angles, need the other direction as well
+        if not food:
+            theta_mat[j, i] = theta_vec_ji[ii]
+
+
+    return dist_mat, theta_mat
 
 def calc_heading(I, food):
     d_x = food.xpos - I.xpos
@@ -582,7 +689,7 @@ def extract_plot_information(isings, foods):
     isings_info = []
     foods_info = []
     for I in isings:
-        isings_info.append([I.xpos, I.ypos, I.r])
+        isings_info.append([I.xpos, I.ypos, I.r, I.energy])
     for f in foods:
         foods_info.append([f.xpos, f.ypos])
     return isings_info, foods_info
@@ -617,55 +724,47 @@ def TimeEvolve(isings, foods, settings, folder, rep):
     '''
     !!! iterating through timesteps
     '''
-    for t in range(T):
-        #print(len(foods))
+    if settings['parallel_computing'] and not settings['BoidOn'] and not settings['ANN']:
+        pool = mp.Pool(12)
 
-        # print('\r', 'Iteration {0} of {1}'.format(t, T), end='') #, end='\r'
-        print('\r', 'Tstep {0}/{1}'.format(t, T), end='')  # , end='\r'
-        if settings['seasons'] == True:
-            foods = seasons(settings, foods, t, T)
+        for t in tqdm(range(T)):
 
-        # PLOT SIMULATION FRAME
-        if settings['plot'] == True and (t % settings['frameRate']) == 0:
-            #plot_frame(settings, folder, fig, ax, isings, foods, t, rep)
-            isings_info, foods_info = extract_plot_information(isings, foods)
-            isings_all_timesteps.append(isings_info)
-            foods_all_timesteps.append(foods_info)
-            #plotting.design_figure(settings, fig, ax)
-            #plotting.initial_plot(isings, foods, settings, ax)
-            #artist_list.append(plotting.create_artists_append(isings, foods, settings))
-
-            #artists_all_TS.append(ax.artists))
-            #artists_all_TS[t] = copy.deepcopy(ax.artists)
-            #ax.cla()
-
-        '''
-        can optimize interact with matrix calculations instead of loops
-        '''
-
-        interact(settings, isings, foods)
-
-            
-        
-        if settings['BoidOn']:
-            boid_update(isings, settings)
             for I in isings:
-                I.position[:, t] = [I.xpos, I.ypos]
+                I.UpdateSensors(settings) # update sensors at beginning
 
-        
-        else:
-            '''
-            parallelization here
-            '''
-            
-                
-            
-            if settings['ANN']:
-                I.ANNUpdate(settings)
+            vars_list = [(settings, I.Ssize, I.size, I.s, I.h, I.J, I.Beta) for I in isings]
+            s_list = pool.map(parallelizedSequGlauberStep, vars_list)
+
+            for i, I in enumerate(isings):
+                I.s = s_list[i]
+                I.Move(settings)  # move organism at end
+
+        pool.close()
+        pool.join()
+    else:
+        for t in tqdm(range(T)):
+            # print('\r', 'Iteration {0} of {1}'.format(t, T), end='') #, end='\r'
+            # print('\r', 'Tstep {0}/{1}'.format(t, T), end='')  # , end='\r'
+            if settings['seasons'] == True:
+                foods = seasons(settings, foods, t, T)
+
+            # PLOT SIMULATION FRAME
+            if settings['plot'] == True and (t % settings['frameRate']) == 0:
+                isings_info, foods_info = extract_plot_information(isings, foods)
+                isings_all_timesteps.append(isings_info)
+                foods_all_timesteps.append(foods_info)
+
+            interact(settings, isings, foods)
+
+            if settings['BoidOn']:
+                boid_update(isings, settings)
+                for I in isings:
+                    I.position[:, t] = [I.xpos, I.ypos]
 
             else:
-                if settings['parallel_computing']:
-                    parallelizedSequGlauberSteps(isings, settings)
+                if settings['ANN']:
+                    for I in isings:
+                        I.ANNUpdate(settings)
                 else:
                     for I in isings:
                         I.SequentialGlauberStep(settings)
@@ -675,6 +774,7 @@ def TimeEvolve(isings, foods, settings, folder, rep):
     if settings['plot']:
         #plotting.animate_plot(artist_list, settings, ax, fig)
         # try:
+        print('Creating animation...')
         plotting.animate_plot_Func(isings_all_timesteps, foods_all_timesteps, settings, ax, fig, rep, t, folder)
         # except Exception:
         #     print('There occurred an error during animation...the simulation keeps going')
@@ -782,12 +882,11 @@ def TimeEvolve2(isings, BetaFactor, settings, T):
 
         # set temperature
         BetaOG.append(I.Beta)
-        I.Beta = I.Beta * BetaFactor  # scale by org's local temperature
+        I.Beta = I.Beta * BetaFactor  # scale org's local temperature by the Beta factor
 
         # random config
         I.randomize_position(settings)
         I.randomize_state()
-        I.fitness = 0
 
     # TIME EVOLUTION / MEASUREMENTS
     print('Thermalizing...')
@@ -819,7 +918,7 @@ def TimeEvolve2(isings, BetaFactor, settings, T):
         if settings['diagnostics'] == True and (t % settings['frameRate']) == 0:
             fitness = 0
             for I in isings:
-                fitness += I.fitness
+                fitness += I.food
             print('t : %4i | F: %4f' % (t, fitness))
 
         for I in isings:
@@ -950,12 +1049,19 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
             settings['plot'] = False
 
         TimeEvolve(isings, foods, settings, folder, rep)
+
+        fitness, fitness_stat = food_fitness(isings)
         if settings['energy_model']:
 
             for I in isings:
                 I.avg_energy = np.median(I.energies)  # Average or median better?
                 I.avg_velocity = I.all_velocity / settings['TimeSteps']
-            eat_rate = np.average([I.avg_energy for I in isings])
+            if settings['energy_is_fitness']:
+                eat_rate = np.average([I.avg_energy for I in isings])
+            else:
+                eat_rate = np.sum(fitness_stat)/settings['TimeSteps']
+        else:
+            eat_rate = np.sum(fitness_stat) / settings['TimeSteps']
 
         if settings['plot'] == True:
             plt.clf()
@@ -964,10 +1070,6 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
 
         if rep % settings['evolution_rate'] == 0:
 
-            fitness, fitness_stat = food_fitness(isings)
-
-            if settings['energy_model'] == False:
-                eat_rate = np.sum(fitness_stat)/settings['TimeSteps'] #avg fitnes, normalized by timestep
 
             if settings['mutateB']:
                 Beta = []
@@ -985,7 +1087,7 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
             fitm = None
             fitC = None
 
-            if settings['energy_model']:
+            if settings['energy_model'] and settings['energy_is_fitness']:
                 fit_func_param_name = 'avg_energy'
             else:
                 fit_func_param_name = 'eat_rate'
@@ -994,11 +1096,13 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
                 print('\n', count, '|', fit_func_param_name, eat_rate, 'mean_Beta', mBeta,
                       'std_Beta', stdBeta, 'min_Beta', minBeta, 'max_Beta', maxBeta)
             else:
-                print('\n', count, '|', 'Avg_fitness', eat_rate)
+                print('\n', count, '|', fit_func_param_name, eat_rate)
 
             if settings['save_data']:
                 if settings['energy_model']:
                     # Clear I.energies in isings_copy before saving
+                    # TODO: so if we're not saving, then this list gets infinitely long. Just clear it with/without
+                    #  the save condition?
                     isings_copy = deepcopy(isings)
                     for I in isings_copy:
                         I.energies = []
@@ -1095,7 +1199,7 @@ def CriticalLearning(isings, foods, settings, Iterations=1):
                 isings = evolve(settings, isings, rep)
         else:
             for I in isings:
-                I.fitness = 0
+                I.food = 0
 
 
 
@@ -1125,7 +1229,7 @@ def food_fitness(isings):
     fitness = []
     for I in isings:
 
-        fitness.append(I.fitness)
+        fitness.append(I.food)
 
     fitness = np.array(fitness, dtype='float')
     mask = fitness != 0
@@ -1144,10 +1248,10 @@ def evolve(settings, I_old, gen):
     '''
     !!!fitness function!!!
     '''
-    if settings['energy_model']:
+    if settings['energy_model'] and settings['energy_is_fitness']:
         I_sorted = sorted(I_old, key=operator.attrgetter('avg_energy'), reverse=True)
     else:
-        I_sorted = sorted(I_old, key=operator.attrgetter('fitness'), reverse=True)
+        I_sorted = sorted(I_old, key=operator.attrgetter('food'), reverse=True)
     I_new = []
 
     alive_num = int(settings['pop_size'] - settings['numKill'])
@@ -1192,7 +1296,7 @@ def evolve(settings, I_old, gen):
 
         # random mutations in duplication
 
-    # MATING OF LIVING POPULATION DOUBLE DIPPING ELITE
+    # MATING OF LIVING POPULATION (DOUBLE DIPPING ELITE)
     for mate in range(0, numMate):
         # TODO: negative weight mutations?!
         # SELECTION (TRUNCATION SELECTION)
@@ -1261,7 +1365,7 @@ def evolve(settings, I_old, gen):
         orgCount += 1
 
     for I in I_new:
-        I.fitness = 0
+        I.food = 0
 
     return I_new
 
@@ -1320,23 +1424,23 @@ def logit(x):
     y = np.log(x / (1 - x))
     return y
 
-def check_eat_food(settings, isings, foods):
-    '''
-    Seems not to be used for anything
-    '''
-    for food in foods:
-        for I in isings:
-
-            food_org_dist = dist(I.xpos, I.ypos, food.xpos, food.ypos)
-
-            # EAT/RESPAWN FOOD
-            if food_org_dist <= 0.075:
-                I.fitness += food.energy
-                food.respawn(settings)
-
-        # RESET DISTANCE AND HEADING TO NEAREST FOOD SOURCE
-        I.d_food = I.maxRange
-        I.r_food = 0
+# def check_eat_food(settings, isings, foods):
+#     '''
+#     Seems not to be used for anything
+#     '''
+#     for food in foods:
+#         for I in isings:
+#
+#             food_org_dist = dist(I.xpos, I.ypos, food.xpos, food.ypos)
+#
+#             # EAT/RESPAWN FOOD
+#             if food_org_dist <= 0.075:
+#                 I.fitness += food.energy
+#                 food.respawn(settings)
+#
+#         # RESET DISTANCE AND HEADING TO NEAREST FOOD SOURCE
+#         I.d_food = I.maxRange
+#         I.r_food = 0
 
 def calc_closest_food(isings, foods):
     for food in foods:
@@ -1392,46 +1496,84 @@ def interact(settings, isings, foods):
     consider making a matrix of values instead of looping through all organisms
     currently, there is redundancy in these loops which might end up being time consuming
     '''
-    for I in isings:
-        I.d_food = I.maxRange
-        I.r_food = 0
-        I.org_sens = 0
+
+    # calculate all agent-agent and agent-food distances
+    Ipos = np.array( [[I.xpos, I.ypos] for I in isings] )
+    foodpos = np.array( [[food.xpos, food.ypos] for food in foods] )
+    dimensions = np.array([settings['x_max'] - settings['x_min'], settings['y_max'] - settings['y_min']])
+    org_heading = np.array([I.r for I in isings]).reshape(len(Ipos), 1)
+
+    dist_mat_org, theta_mat_org = pdistance_pairwise(Ipos, Ipos, dimensions, food=False)
+    dist_mat_food, theta_mat_food = pdistance_pairwise(Ipos, foodpos, dimensions, food=True)
+
+    # calculate agent-agent and agent-food angles
+    theta_mat_org = theta_mat_org - org_heading
+    theta_mat_food = theta_mat_food - org_heading
+
+    theta_mat_org = np.mod(theta_mat_org, 360)
+    theta_mat_org = np.where(theta_mat_org > 180, theta_mat_org - 360, theta_mat_org)
+
+    theta_mat_food = np.mod(theta_mat_food, 360)
+    theta_mat_food = np.where(theta_mat_food > 180, theta_mat_food - 360, theta_mat_food)
+
+    # calculate org sensor
+    org_sensor = np.where(np.abs(theta_mat_org) > 90, 0, np.cos(np.deg2rad(theta_mat_org)))
+    org_radius = np.array([I.radius for I in isings]).reshape(len(Ipos), 1)
+    org_sensor = (org_sensor * org_radius) / (dist_mat_org + dist_mat_org.T + 1e-6) ** 2
+    np.fill_diagonal(org_sensor, 0)
+    org_sensor = np.sum(org_sensor, axis=1)
+
+    for i, I in enumerate(isings):
         if settings['energy_model']:
             I.energies.append(I.energy)
 
-        for food in foods:
-            food_org_dist = dist(I.xpos, I.ypos, food.xpos, food.ypos)
+        # threshold food vision
+        visionMask = dist_mat_food < settings['vision_radius']
 
-            # EAT
-            if food_org_dist <= settings['org_radius']:
+
+        minFoodDist = np.min(dist_mat_food[i, :])
+        foodInd = np.argmin(dist_mat_food[i, :])
+        I.d_food = minFoodDist  # Distance to closest food
+        I.r_food = theta_mat_food[i, foodInd] # "angle" to closest food
+
+        # if food is close enough, eat it
+        if minFoodDist <= settings['org_radius']:
+
+            # check if food is to be shared/distributed
+            if not settings['share_food']:
+                I.food += foods[foodInd].energy
                 if settings['energy_model']:
-                    I.energy += food.energy
-                    I.food += food.energy
-                else:
-                    I.fitness += food.energy
-                '''
-                finess is proportional to energy
-                '''
-                food.respawn(settings)
+                    I.energy += foods[foodInd].energy
+            else:
+                neighbours = dist_mat_org[i, :] < settings['share_radius']
+                neighbours[i] = False
+                numneighbours = np.sum(neighbours)
 
-            # DETERMINE IF THIS IS THE CLOSEST FOOD PARTICLE
-            if food_org_dist < I.d_food:
-                I.d_food = food_org_dist #Distance to closest food
-                I.r_food = calc_heading(I, food) #"angle" to closest food
+                if numneighbours > 0:  # if there are neighbours, share it
 
-        for I2 in isings:
+                    # diminishing returns for sharing food among more people
+                    foodshare = settings['share_param'] * np.exp(-(numneighbours - 1)/5)
 
-            if I != I2:
-                org_org_dist = dist(I.xpos, I.ypos, I2.xpos, I2.ypos)
-                org_org_heading = calc_heading(I, I2)
+                    I.food += foods[foodInd].energy * \
+                              (1 - settings['zerosum_param'] * foodshare * numneighbours)
+                    if settings['energy_model']:
+                        I.energy += foods[foodInd].energy * \
+                                    (1 - settings['zerosum_param'] * foodshare * numneighbours)
 
-                # implement a directional sensor
-                if abs(org_org_heading) > 90:
-                    dot_org_heading = 0
-                else:
-                    dot_org_heading = np.cos(np.deg2rad(org_org_heading))
+                    for Ineighbour in [II for ii, II in enumerate(isings) if neighbours[ii]]:
+                        Ineighbour.food += foods[foodInd].energy * foodshare
+                        if settings['energy_model']:
+                            Ineighbour.energy += foods[foodInd].energy * foodshare
+                else:  # if no neighbours
+                    I.food += foods[foodInd].energy
+                    if settings['energy_model']:
+                        I.energy += foods[foodInd].energy
+            '''
+            finess is proportional to energy
+            '''
+            foods[foodInd].respawn(settings)
 
-                I.org_sens += ((dot_org_heading * I.radius) / (org_org_dist + 1e-6) ** 2)
+        I.org_sens = org_sensor[i]
 
 
 
@@ -1452,20 +1594,25 @@ def update_ising(settings, I, t):
 def boid_dv(isings, settings):
     vision_radius = 0.75
     N = len(isings)
-    combos = list(combinations(range(0, len(isings)), r=2))
+    combos = list(combinations(range(0, N), r=2))
 
-    ## CALCULATE CUMULATIVE AVERAGES
-    # t_center = np.zeros(2)
-    # t_velocity = np.zeros(2)
-    pos_list = np.zeros((len(isings), 2))
-    vel_list = np.zeros((len(isings), 2))
-    for i, I in enumerate(isings):
-        pos_list[i, :] = np.array((I.xpos, I.ypos))
-        vel_list[i, :] = np.array((I.dx, I.dy))
-        # t_center += pos_i
-        # t_velocity += np.array((I.dx, I.dy))
+    # ## CALCULATE CUMULATIVE AVERAGES
+    # # t_center = np.zeros(2)
+    # # t_velocity = np.zeros(2)
+    # pos_list = np.zeros((N, 2))
+    # vel_list = np.zeros((N, 2))
+
+    pos_list = np.array([[I.xpos, I.ypos] for I in isings])
+    vel_list = np.array([[I.dx, I.dy] for I in isings])
+
+    # for i, I in enumerate(isings):
+    #     pos_list[i, :] = np.array((I.xpos, I.ypos))
+    #     vel_list[i, :] = np.array((I.dx, I.dy))
+    #     # t_center += pos_i
+    #     # t_velocity += np.array((I.dx, I.dy))
 
     ## CALCULATE DISTANCE MATRIX
+    # TODO: use the new periodic distance function (and time it).
     dist_mat = np.zeros((len(isings), len(isings), 2))
     for pair in combos:
         ii = pair[0]
@@ -1561,8 +1708,8 @@ def boid_dv(isings, settings):
         # dv4 = 0.001 * random_dv
         Ii.dvb = cohesion_vector + (0.2 * repulsion_vector) + dv3 + (0.005 * random_dv)
 
-def boid_move(isings, settings):
-    for I in isings:
+def boid_move(agents, settings):
+    for I in agents:
         # dvb = I.dv1 + I.dv2 + I.dv3 + I.dv4
         # normdvb = np.linalg.norm(dvb)
         # if normdvb > settings['dv_max']:
@@ -1587,16 +1734,6 @@ def boid_move(isings, settings):
         # torus boundary conditions
         I.xpos = (I.xpos + settings['x_max']) % settings['x_max']
         I.ypos = (I.ypos + settings['y_max']) % settings['y_max']
-
-        # if abs(I.xpos) > settings['x_max']:
-        #     # I.xpos = -I.xpos
-        #     # I.xpos = -1 * np.sign(I.xpos) * settings['x_max']
-        #     I.xpos = -1 * np.sign(I.xpos) * (settings['x_max'] - np.abs(I.xpos) % settings['x_max'])
-        #
-        # if abs(I.ypos) > settings['y_max']:
-        #     # I.ypos = -I.ypos
-        #     # I.ypos = -1 * np.sign(I.ypos) * settings['y_max']
-        #     I.ypos = -1 * np.sign(I.ypos) * (settings['y_max'] - np.abs(I.ypos) % settings['y_max'])
 
 # Derivative of neuron output
 def transfer_derivative(output):

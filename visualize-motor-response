@@ -13,16 +13,19 @@ def dec2bin(num,num_digits):
     frmt += 'b}'
     return frmt.format(num)
 
-loadfile = 'sim-20191009-154930'
-gen = 3999
-motor = 'dr'
+loadfile = 'sim-20200119-004553-p_50_-t_2000_-g_4000_-a_3999_-ie_2_-ef_-sf_-zs_0_-n_ANN_energy_is_fitness_Beta_foodshare'
+gen = 1999
+# motor = 'dr'
+sensorInd = 0
+sensorNames = ['r_food', 'd_food', 'org_sens']
+sensor = sensorNames[sensorInd]
 
 plt.rc('text', usetex=True)
 font = {'family': 'serif', 'size': 15, 'serif': ['computer modern roman']}
 plt.rc('font', **font)
 plt.rc('legend', **{'fontsize': 16})
 
-R = 1
+R = 5
 
 Nsens = 100
 sens = np.linspace(-1, 1, Nsens)
@@ -33,7 +36,8 @@ fontsize = 20
 d = np.dtype([('MV', 'f8'), ('MR', 'f8'), ('CMV', 'f8'), ('CMR', 'f8')])
 data = np.zeros((R, numAgents, Nsens), dtype=d)
 
-folder = 'save/' + loadfile + '/Motor_Response_' + motor + '/gen_' + str(gen) + '/'
+# folder = 'save/' + loadfile + '/Motor_Response_' + motor + '/gen_' + str(gen) + '/'
+folder = 'save/' + loadfile + '/Motor_Response/gen_' + str(gen) + '/' + str(sensorInd) + '/'
 
 for sensInd in np.arange(1, Nsens):
     file = 'MR-' + 'Nsens_' + str(Nsens) + \
@@ -46,11 +50,11 @@ for sensInd in np.arange(1, Nsens):
 
 
 fig, ax = plt.subplots(2, 2, figsize=(14, 10), sharex=False)
-if motor == 'dr':
+if sensor == 'r_food':
     fig.text(0.5, 0.04, 'Sensory Activation (food angle)', ha='center', fontsize=fontsize)
-elif motor == 'dv':
+elif sensor == 'd_food':
     fig.text(0.5, 0.04, 'Sensory Activation (food distance)', ha='center', fontsize=fontsize)
-elif motor == 'dp':
+elif sensor == 'org_sens':
     fig.text(0.5, 0.04, 'Sensory Activation (proximity sensor)', ha='center', fontsize=fontsize)
 
 fig.text(0.04, 0.72, 'Motor Response', va='center', rotation='vertical', fontsize=fontsize)
@@ -62,14 +66,18 @@ fig.suptitle(title)
 
 b = 0
 alpha = 0.1
-if motor == 'dr':
+if sensor == 'r_food':
     theta = sens * 180
     xticks = [-180, -90, 0, 90, 180]
-elif motor == 'dv':
-    dist = np.sqrt( 1 / ( np.arctanh( (sens + 1 ) / 2 ) ) - 1e-6 )  #  plot as a function of distance
-    # xticks = [np.min(dist[1:-1]), 1, 2, 4, np.max(dist[1:-1])]
-    xticks = [0.5, 1, 2, 4, 9]
-elif motor == 'dp':
+elif sensor == 'd_food':
+    # dist = np.sqrt( 1 / ( np.arctanh( (sens + 1 ) / 2 ) ) - 1e-6 )  #  plot as a function of distance
+    # # xticks = [np.min(dist[1:-1]), 1, 2, 4, np.max(dist[1:-1])]
+    # xticks = [0.5, 1, 2, 4, 9]
+
+
+    xticks = [-1, -0.5, 0, 0.5, 1]
+    dist = sens
+elif sensor == 'org_sens':
     xticks = [-1, -0.5, 0, 0.5, 1]
 
 
@@ -88,21 +96,21 @@ for iplot, name in enumerate(d.names):
 
     for i in range(0, 50):
 
-        if motor == 'dr':
+        if sensor == 'r_food':
 
             ax[x, y].scatter(
                 theta[1:], np.mean(data[name][:, i, 1:],  # average across repitions
                               axis=0), color=[b, b, b], s=30, alpha=alpha)
-        elif motor == 'dv':
+        elif sensor == 'd_food':
             ax[x, y].scatter(
                 dist[1:], np.mean(data[name][:, i, 1:],  # average across repitions
                                    axis=0), color=[b, b, b], s=30, alpha=alpha)
-        elif motor == 'dp':
+        elif sensor == 'org_sens':
             ax[x, y].scatter(
                 sens[1:], np.mean(data[name][:, i, 1:],  # average across repitions
                                   axis=0), color=[b, b, b], s=30, alpha=alpha)
 
-            if motor == 'dv':
+            if sensor == 'd_food':
                 ax[x, y].set_xscale("log", nonposx='clip')
         ax[x, y].set_xticks(xticks)
         ax[x, y].get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
@@ -132,7 +140,7 @@ figfolder = 'save/' + loadfile + '/figs/Motor_Response/'
 if not path.exists(figfolder):
     makedirs(figfolder)
 
-figname = figfolder + motor + '-gen-' + str(gen) + '.png'
+figname = figfolder + sensor + '-gen-' + str(gen) + '.png'
 
 plt.savefig(figname, bbox_inches='tight', dpi=150)
 plt.show()
