@@ -34,15 +34,16 @@ def create_settings():
     settings['TimeSteps'] = args.time_steps # number of timesteps per iteration #2000
 
     # number of system-wide spin updates per unit of time  (multiplies computation time)
-    settings['thermalTime'] = 3
+    settings['thermalTime'] = 1
     
     settings['evolution_toggle'] = False  # only toggles for CriticalLearning
     settings['evolution_rate'] = 1  # only with critical learning number of iterations to skip to kill/mate (gives more time to eat before evolution)
     
     settings['dt'] = 0.2  # kinetic time step      (dt)
-    settings['dr_max'] = 90  # max rotational speed      (degrees per second)
-    settings['v_max'] = args.v_max #999  # 0.5 max velocity              (units per second)
+    settings['ddr_max'] = 25  # max rotational acceleration      (degrees per second^2)
+    settings['dr_max'] = 999  # max rotational speed      (degrees per second)
     settings['dv_max'] = 0.05  # max acceleration (+/-)    (units per second^2)
+    settings['v_max'] = args.v_max #999  # 0.5 max velocity              (units per second)
     
     settings['x_min'] = 0.0  # arena eastern border
     settings['x_max'] = 8.0  # arena western border
@@ -90,9 +91,11 @@ def create_settings():
     
     settings['energy_model'] = not args.no_ener_mod #BOO
     settings['energy_is_fitness'] = args.ener_isfit_mod
-    settings['v_min'] = args.v_min  # FLOAT [0,1)
+    # settings['v_min'] = args.v_min  # FLOAT [0,1)
+    settings['dv_min'] = args.dv_min  # min acceleration (only used in energy model)
     settings['cost_speed'] = args.cost_speed  # FLOAT [0,1] energy cost of speed as a factor of speed #default 0.05
     settings['initial_energy'] = args.init_energy  # Energy that each organism starts with in each simulation
+    settings['friction'] = args.friction
 
     # Zero-sum settings
     settings['share_food'] = args.share_food_mod  # can food be shared
@@ -116,7 +119,7 @@ def parse():
                                      ------Default values-----
                                      save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps=20,
                         loadfile='', loaditer = 2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False,
-                        server_mode=False, cost_speed=0.05, v_max=999.0, v_min=0.05, sig_beta=0.02, no_mut_beta=False,
+                        server_mode=False, cost_speed=0.05, v_max=999.0, dv_min=0.005, sig_beta=0.02, no_mut_beta=False,
                         init_energy=0, food_energy=1, no_ener_mod=False
                                      ''')
     parser.add_argument('-p', '--pop', dest='pop_size', type=int, help='Number of individuals in each generation')
@@ -155,10 +158,12 @@ def parse():
                         help='Switch off energy model and instead optimize for maximal number of foods eaten')
     parser.add_argument('-ef', '--energy_is_fitness', dest='ener_isfit_mod', action='store_true',
                         help='Optimize for average energy.')
-    parser.add_argument('-vma', '--v_max', dest='v_max', type=float, help='Max speed of agends')
-    parser.add_argument('-vmi', '--v_min', dest='v_min', type=float,
-                        help='''Min speed of agends. Up until this speed agends do not use energy for movement when 
-                        energy model is switched on''')
+    parser.add_argument('-vma', '--v_max', dest='v_max', type=float, help='Max speed of agents')
+    parser.add_argument('-dvmi', '--dv_min', dest='dv_min', type=float,
+                        help='''Min acceleration of agents. Up until this speed agents do not use energy for movement 
+                        when energy model is switched on''')
+    parser.add_argument('-fr', '--friction', dest='friction', type=float,
+                        help='''Friction coeffecient for deceleration.''')
     parser.add_argument('-sf', '--share_food', dest='share_food_mod', action='store_true',
                         help='''Share food with other organisms in a small radius.''')
     parser.add_argument('-zs', '--zerosum', dest='zerosum', type=float,
@@ -167,11 +172,11 @@ def parse():
 
     #-n does not do anything in the code as input arguments already define name of folder. Practical nonetheless.
 
-    parser.set_defaults(save_data=False, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps=30,
+    parser.set_defaults(save_data=True, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps=30,
                         loadfile='', loaditer=2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=True,
-                        server_mode=False, cost_speed=0.05, v_max=999.0, v_min=0.05, sig_beta=0.02, no_mut_beta=False,
-                        init_energy=0, food_energy=1, no_ener_mod=False, ener_isfit_mod=False, share_food_mod=False,
-                        zerosum=1)
+                        server_mode=False, cost_speed=0.05, v_max=999.0, dv_min=0.005, friction= 0.01, sig_beta=0.02,
+                        no_mut_beta=False, init_energy=0, food_energy=1, no_ener_mod=False, ener_isfit_mod=False,
+                        share_food_mod=False, zerosum=1)
 
     # parser.set_defaults(save_data=True, plot=False, iterations=1, time_steps=2000, plot_gens=[], fps=20,
     #                     loadfile='', loaditer=2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False,

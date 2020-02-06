@@ -85,15 +85,15 @@ for rep in range(R):
             # -1, 0, 1 for brake, nothing, accelerate
             # dv = (np.sum(I.s[-I.Msize1:]) / 2)
             # dr = (np.sum(I.s[-I.Msize:-I.Msize1]) / 2)
-            I.updateAcceleration(settings)
+            I.updateAcceleration()
 
             Mv += I.dv / float(T)  # dv
-            Mr += I.dr / float(T)  # dr
+            Mr += I.ddr / float(T)  # dr
 
             # print(I.s[:3])
 
             M2v += I.dv ** 2 / float(T)
-            M2r += I.dr ** 2 / float(T)
+            M2r += I.ddr ** 2 / float(T)
 
         data['MV'][rep, agentNum] = Mv
         data['MR'][rep, agentNum] = Mr

@@ -115,6 +115,7 @@ class ising:
         self.all_velocity = 0
         self.avg_velocity = 0
         self.v = 0.0
+        self.dr = 0
 
 
         self.assign_critical_values(settings)
@@ -200,67 +201,42 @@ class ising:
                 if i < j and (i >= self.Ssize or j >= self.Ssize):
                     self.J[i, j] = (np.random.rand(1) * 2 - 1) * self.max_weights
 
-    def updateAcceleration(self, settings):
-        self.dr = (np.sum(self.s[-self.Msize:-self.Msize1]) / 2)
+    def updateAcceleration(self):
+        self.ddr = (np.sum(self.s[-self.Msize:-self.Msize1]) / 2)
         self.dv = (np.sum(self.s[-self.Msize1:]) / 2)
 
     def updateVelocity(self, settings):
 
-        self.updateAcceleration(settings)
-        self.dr = self.dr * settings['dr_max'] * settings['dt']
+        self.updateAcceleration()
+        self.ddr = self.ddr * settings['ddr_max'] * settings['dt']
         self.dv = self.dv * settings['dv_max'] * settings['dt']
 
-        self.r += self.dr
-        self.r = self.r % 360
+        if settings['energy_model']:
+            energy_cost = self.dv * settings['cost_speed']
+            if self.energy >= energy_cost and self.dv > settings['dv_min']:
+                #if agent has enough energy and wants to accelerate faster than the "free" acceleration
+                self.energy -= energy_cost
+            elif self.dv > settings['dv_min']:
+                #if agent wants to go faster than min speed but does not have energy
+                self.dv = settings['dv_min']
+            self.all_velocity += self.v
 
         # UPDATE VELOCITY - Motor neuron s.[-self.Msize1:]
-        self.v += self.dv
-        # TODO: Negative values for velocity????
+        self.v += self.dv - settings['friction'] * self.v**2
+        self.dr += self.ddr - settings['friction'] * np.sign(self.dr)*self.dr**2
 
         if self.v < 0:
             self.v = 0
 
+
         if self.v > settings['v_max']:
             self.v = settings['v_max']
 
-        if settings['energy_model']:
-            if self.energy >= (self.v * settings['cost_speed']) and self.v > settings['v_min']:
-                #if agent has enough energy and wants to go faster than min speed
-                self.energy -= (self.v + self.dr) * settings['cost_speed']
-            elif self.v > settings['v_min']:
-                #if agent wants to go faster than min speed but does not have energy
-                self.v = settings['v_min']
-            self.all_velocity += self.v
+        if np.abs(self.dr) > settings['dr_max']:
+            self.dr = settings['dr_max']
+
 
     def Move(self, settings):
-        # # print(self.s[-2:])
-        # # TODO: velocity coeffecient that can be mutated?
-        # # UPDATE HEADING - Motor neuron s.[-self.Msize:self.Msize1]
-        # self.dr = (np.sum(self.s[-self.Msize:-self.Msize1]) / 2) * settings['dr_max'] * settings['dt']
-        # self.r += self.dr
-        # self.r = self.r % 360
-        #
-        # # UPDATE VELOCITY - Motor neuron s.[-self.Msize1:]
-        # self.v += (np.sum(self.s[-self.Msize1:]) / 2) * settings['dv_max'] * settings['dt']
-        # # TODO: Negative values for velocity????
-        #
-        # if self.v < 0:
-        #     self.v = 0
-        #
-        # if self.v > settings['v_max']:
-        #     self.v = settings['v_max']
-        #
-        #
-        # if settings['energy_model']:
-        #     if self.energy >= (self.v * settings['cost_speed']) and self.v > settings['v_min']:
-        #         #if agend has enough energy and wants to go faster than min speed
-        #         self.energy -= (self.v + self.dr) * settings['cost_speed']
-        #     elif self.v > settings['v_min']:
-        #         #if agned wants to go faster than min speed but does not have energy
-        #         self.v = settings['v_min']
-        #     self.all_velocity += self.v
-        #
-        # # print('Velocity: ' + str(self.v) +  str(self.s[-1]))
         self.updateVelocity(settings)
 
         # UPDATE POSITION
@@ -269,6 +245,10 @@ class ising:
         self.xpos += self.dx
         self.ypos += self.dy
         # print(self.dx, self.dy)
+
+        # UPDATE HEADING
+        self.r += self.dr
+        self.r = self.r % 360
 
         # periodic boundary conditions.
         self.xpos = (self.xpos + settings['x_max']) % settings['x_max']
@@ -318,6 +298,8 @@ class ising:
     def ANNStep(self):
 
         # SIMPLE MLP
+        # TODO: add biases (add to GA as well)
+
         af = lambda x: np.tanh(x)  # activation function
         Jhm = self.J + np.transpose(self.J)  # connectivity for hidden/motor layers
 
@@ -1528,7 +1510,7 @@ def interact(settings, isings, foods):
             I.energies.append(I.energy)
 
         # threshold food vision
-        visionMask = dist_mat_food < settings['vision_radius']
+        # visionMask = dist_mat_food < settings['vision_radius']
 
 
         minFoodDist = np.min(dist_mat_food[i, :])

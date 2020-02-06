@@ -35,6 +35,22 @@ def plot_anything_auto(sim_name, plot_vars, settings, isings_list = None, autoLo
 
 
 if __name__ == '__main__':
-    sim_name = 'sim-20200120-004551-p_50_-t_2000_-g_4000_-a_3999_-ie_2_-ef_-sf_-zs_1_-l_sim-20200119-004608-p_50_-t_2000_-g_4000_-a_3999_-ie_2_-ef_-sf_-zs_1_-n_ANN_energy_is_fitness_Beta_foodshare_-li_3999'
-    main(sim_name)
+    # sim_name = 'sim-20200120-004759-p_50_-t_2000_-g_8000_-a_7999_-ie_2_-ef_-sf_-zs_1_-n_ANN_energy_is_fitness_Beta_foodshare'
+    # main(sim_name)
 
+    sim_names = ['sim-20200128-151458-p_50_-t_2000_-g_8000_-a_7999_-b_0.1_-ie_2_-ef_-fr_0.1_-zs_0_'
+                 '-n_ANN_new_physics_FIXED',
+                 'sim-20200128-151506-p_50_-t_2000_-g_8000_-a_7999_-b_1_-ie_2_-ef_-fr_0.1_-zs_0_'
+                 '-n_ANN_new_physics_FIXED',
+                 'sim-20200128-151513-p_50_-t_2000_-g_8000_-a_7999_-b_10_-ie_2_-ef_-fr_0.1_-zs_0_'
+                 '-n_ANN_new_physics_FIXED',
+                 'sim-20200128-151522-p_50_-t_2000_-g_8000_-a_7999_-b_0.1_-ie_2_-ef_-fr_0.1_-zs_1_'
+                 '-n_ANN_new_physics_FIXED',
+                 'sim-20200128-151529-p_50_-t_2000_-g_8000_-a_7999_-b_1_-ie_2_-ef_-fr_0.1_-zs_1_'
+                 '-n_ANN_new_physics_FIXED',
+                 'sim-20200128-151534-p_50_-t_2000_-g_8000_-a_7999_-b_10_-ie_2_-ef_-fr_0.1_-zs_1_'
+                 '-n_ANN_new_physics_FIXED',
+                 ]
+
+    for s in sim_names:
+        main(s)
