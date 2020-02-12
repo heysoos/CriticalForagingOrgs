@@ -5,7 +5,7 @@ from scipy.special import comb
 import matplotlib.pyplot as plt
 from matplotlib import colors
 import pickle
-from os import path, makedirs
+from os import path, makedirs, listdir
 
 # beta-1/sim-20180511-163319
 # beta-10/sim-20180512-105824
@@ -14,8 +14,13 @@ from os import path, makedirs
 #              'beta_experiment/beta-10/sim-20180512-105824',
 #              'beta_experiment/beta-0-1/sim-20180512-105719']
 
-loadfiles = ['sim-20200120-004551-p_50_-t_2000_-g_4000_-a_3999_-ie_2_-ef_-sf_-zs_1_-l_sim-20200119-004608-p_50_-t_2000_-g_4000_-a_3999_-ie_2_-ef_-sf_-zs_1_-n_ANN_energy_is_fitness_Beta_foodshare_-li_3999']
-iter_list = np.arange(0, 4000, 1)
+
+folder = 'exp_1'
+d = path.join('save', folder)
+loadfiles = [path.join(folder, o) for o in listdir(d)
+             if path.isdir(path.join(d, o))]
+
+iter_list = np.arange(0, 2000, 1)
 numAgents = 50
 numNeurons = 10
 

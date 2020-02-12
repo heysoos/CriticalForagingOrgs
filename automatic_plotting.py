@@ -3,6 +3,7 @@ from automatic_plot_helper import load_settings
 from automatic_plot_helper import load_isings
 import plot_anything_combined
 import plot_anythingXY_scatter
+from os import path, listdir
 
 def main(sim_name, load_isings_list=True):
     settings = load_settings(sim_name)
@@ -38,19 +39,11 @@ if __name__ == '__main__':
     # sim_name = 'sim-20200120-004759-p_50_-t_2000_-g_8000_-a_7999_-ie_2_-ef_-sf_-zs_1_-n_ANN_energy_is_fitness_Beta_foodshare'
     # main(sim_name)
 
-    sim_names = ['sim-20200128-151458-p_50_-t_2000_-g_8000_-a_7999_-b_0.1_-ie_2_-ef_-fr_0.1_-zs_0_'
-                 '-n_ANN_new_physics_FIXED',
-                 'sim-20200128-151506-p_50_-t_2000_-g_8000_-a_7999_-b_1_-ie_2_-ef_-fr_0.1_-zs_0_'
-                 '-n_ANN_new_physics_FIXED',
-                 'sim-20200128-151513-p_50_-t_2000_-g_8000_-a_7999_-b_10_-ie_2_-ef_-fr_0.1_-zs_0_'
-                 '-n_ANN_new_physics_FIXED',
-                 'sim-20200128-151522-p_50_-t_2000_-g_8000_-a_7999_-b_0.1_-ie_2_-ef_-fr_0.1_-zs_1_'
-                 '-n_ANN_new_physics_FIXED',
-                 'sim-20200128-151529-p_50_-t_2000_-g_8000_-a_7999_-b_1_-ie_2_-ef_-fr_0.1_-zs_1_'
-                 '-n_ANN_new_physics_FIXED',
-                 'sim-20200128-151534-p_50_-t_2000_-g_8000_-a_7999_-b_10_-ie_2_-ef_-fr_0.1_-zs_1_'
-                 '-n_ANN_new_physics_FIXED',
-                 ]
+    # sim_names = ['sim-20200206-192604-p_50_-t_2000_-g_2000_-a_1999_-ie_2_-ef_-b_1_-zs_1_-fr_0_-n_ANN']
+    folder = 'exp_1'
+    d = path.join('save', folder)
+    sim_names = [path.join(folder, o) for o in listdir(d)
+                 if path.isdir(path.join(d, o))]
 
     for s in sim_names:
         main(s)

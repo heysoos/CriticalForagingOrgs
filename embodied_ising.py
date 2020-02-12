@@ -28,6 +28,8 @@ import pickle
 import time
 #import random
 from tqdm import tqdm
+from shutil import copyfile
+
 
 
 # ------------------------------------------------------------------------------+
@@ -60,7 +62,7 @@ class ising:
                              (settings['y_max'] - settings['y_min']) ** 2)
 
         self.randomize_state()
-        self.xpos = 0.0 #Position
+        self.xpos = 0.0 # Position
         self.ypos = 0.0
         self.randomize_position(settings) #randomize position
 
@@ -117,12 +119,47 @@ class ising:
         self.v = 0.0
         self.dr = 0
 
+        if settings['share_food']:
+            self.foodfound = 0
+            self.foodshared = 0
+            self.foodgiven = 0
+
 
         self.assign_critical_values(settings)
 
 
-        if not settings['BoidOn']:
-            self.Update(settings, 0)
+        # if not settings['BoidOn']:
+        #     self.Update(settings, 0)
+
+    def reset_state(self, settings):
+
+        # randomize internal state (not using self.random_state since it also randomizes sensors)
+        self.s = np.random.random(size=self.size) * 2 - 1
+        # randomize position (not using self.randomize_position function since it also randomizes velocity)
+        self.xpos = uniform(settings['x_min'], settings['x_max'])  # position (x)
+        self.ypos = uniform(settings['y_min'], settings['y_max'])  # position (y)
+
+        self.dv = 0
+        self.v = 0
+
+        self.ddr = 0
+        self.dr = 0
+
+        self.food = 0
+        self.fitness = 0
+
+        if settings['energy_model']:
+            self.energies = []  # Clear .energies, that .avg_energy is calculated from with each iteration
+            self.energy = settings['initial_energy']  # Setting initial energy
+
+            self.avg_energy = 0
+            self.all_velocity = 0
+            self.avg_velocity = 0
+
+        if settings['share_food']:
+            self.foodfound = 0
+            self.foodshared = 0
+            self.foodgiven = 0
 
     def get_state(self, mode='all'):
         if mode == 'all':
@@ -219,11 +256,10 @@ class ising:
             elif self.dv > settings['dv_min']:
                 #if agent wants to go faster than min speed but does not have energy
                 self.dv = settings['dv_min']
-            self.all_velocity += self.v
 
         # UPDATE VELOCITY - Motor neuron s.[-self.Msize1:]
         self.v += self.dv - settings['friction'] * self.v**2
-        self.dr += self.ddr - settings['friction'] * np.sign(self.dr)*self.dr**2
+        self.dr += self.ddr - settings['friction'] * np.sign(self.dr)*self.dr
 
         if self.v < 0:
             self.v = 0
@@ -232,12 +268,96 @@ class ising:
         if self.v > settings['v_max']:
             self.v = settings['v_max']
 
+        if settings['energy_model']:
+            self.all_velocity += self.v
+
         if np.abs(self.dr) > settings['dr_max']:
             self.dr = settings['dr_max']
 
 
     def Move(self, settings):
         self.updateVelocity(settings)
+
+        # UPDATE POSITION
+        self.dx = self.v * cos(radians(self.r)) * settings['dt']
+        self.dy = self.v * sin(radians(self.r)) * settings['dt']
+        self.xpos += self.dx
+        self.ypos += self.dy
+        # print(self.dx, self.dy)
+
+        # UPDATE HEADING
+        self.r += self.dr
+        self.r = self.r % 360
+
+        # periodic boundary conditions.
+        self.xpos = (self.xpos + settings['x_max']) % settings['x_max']
+        self.ypos = (self.ypos + settings['y_max']) % settings['y_max']
+
+    def MoveOld(self, settings):
+
+        self.r += (np.sum(self.s[-self.Msize:-self.Msize1]) / 2) * settings['dr_max'] * settings['dt']
+        self.r = self.r % 360
+
+        self.dv = (np.sum(self.s[-self.Msize1:]) / 2) * settings['dv_max'] * settings['dt']
+        self.v += self.dv
+
+        if self.v < 0:
+            self.v = 0
+
+        if self.v > settings['v_max']:
+            self.v = settings['v_max']
+
+        if settings['energy_model']:
+            energy_cost = self.v * settings['cost_speed']
+            if self.energy >= energy_cost and self.v > settings['v_min']:
+                #if agent has enough energy and wants to accelerate faster than the "free" acceleration
+                self.energy -= energy_cost
+            elif self.v > settings['v_min']:
+                #if agent wants to go faster than min speed but does not have energy
+                self.v = settings['v_min']
+            self.all_velocity += self.v
+
+        #############################
+
+        # UPDATE POSITION
+        self.dx = self.v * cos(radians(self.r)) * settings['dt']
+        self.dy = self.v * sin(radians(self.r)) * settings['dt']
+        self.xpos += self.dx
+        self.ypos += self.dy
+        # print(self.dx, self.dy)
+
+        # UPDATE HEADING
+        self.r += self.dr
+        self.r = self.r % 360
+
+        # periodic boundary conditions.
+        self.xpos = (self.xpos + settings['x_max']) % settings['x_max']
+        self.ypos = (self.ypos + settings['y_max']) % settings['y_max']
+
+    def MoveVelMotors(self, settings):
+
+        self.r += (np.sum(self.s[-self.Msize:-self.Msize1]) / 2) * settings['dr_max'] * settings['dt']
+        self.r = self.r % 360
+
+        self.v = (np.sum(self.s[-self.Msize1:]) / 2) * settings['v_max'] * settings['dt']
+
+        if self.v < 0:
+            self.v = 0
+
+        # if self.v > settings['v_max']:
+        #     self.v = settings['v_max']
+
+        if settings['energy_model']:
+            energy_cost = self.v * settings['cost_speed']
+            if self.energy >= energy_cost and self.v > settings['v_min']:
+                #if agent has enough energy and wants to accelerate faster than the "free" acceleration
+                self.energy -= energy_cost
+            elif self.v > settings['v_min']:
+                #if agent wants to go faster than min speed but does not have energy
+                self.v = settings['v_min']
+            self.all_velocity += self.v
+
+        #############################
 
         # UPDATE POSITION
         self.dx = self.v * cos(radians(self.r)) * settings['dt']
@@ -363,7 +483,9 @@ class ising:
         for j in range(thermalTime):
             self.ANNStep()
 
-        self.Move(settings)  # move organism at end
+        # self.Move(settings)  # move organism at end
+        self.MoveOld(settings)
+        # self.MoveVelMotors(settings)
 
     # update everything except sensors
     def NoSensorGlauberStep(self):
@@ -681,14 +803,17 @@ def extract_plot_information(isings, foods):
 
 def TimeEvolve(isings, foods, settings, folder, rep):
 
-    if settings['energy_model']:
-        for I in isings:
-            I.energies = []  # Clear .energies, that .avg_energy is calculated from with each iteration
-            I.energy = settings['initial_energy']  # Setting initial energy
+    # if settings['energy_model']:
+    #     for I in isings:
+    #         I.energies = []  # Clear .energies, that .avg_energy is calculated from with each iteration
+    #         I.energy = settings['initial_energy']  # Setting initial energy
+
+    for I in isings:
+        I.reset_state(settings)
 
     T = settings['TimeSteps']
-    for I in isings:
-        I.position = np.zeros((2, T))
+    # for I in isings:
+    #     I.position = np.zeros((2, T))
 
     # Main simulation loop:
     if settings['plot'] == True:
@@ -1016,6 +1141,7 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
 
             #save settings dicitionary
             save_settings(folder, settings)
+            save_model(folder)
     # else:
     #     folder = None
 
@@ -1347,7 +1473,7 @@ def evolve(settings, I_old, gen):
         orgCount += 1
 
     for I in I_new:
-        I.food = 0
+        I.reset_state(settings)
 
     return I_new
 
@@ -1359,6 +1485,10 @@ def save_settings(folder, settings):
     pickle.dump(settings, pickle_out)
     pickle_out.close()
 
+def save_model(folder):
+    src = 'embodied_ising.py'
+    dst = folder + src
+    copyfile(src, dst)
 
 
 def save_sim(folder, isings, fitness_stat, mutationrate, fitC, fitm, gen):
@@ -1538,6 +1668,10 @@ def interact(settings, isings, foods):
 
                     I.food += foods[foodInd].energy * \
                               (1 - settings['zerosum_param'] * foodshare * numneighbours)
+
+                    I.foodfound += 1
+                    I.foodshared += foods[foodInd].energy * foodshare * numneighbours
+
                     if settings['energy_model']:
                         I.energy += foods[foodInd].energy * \
                                     (1 - settings['zerosum_param'] * foodshare * numneighbours)
@@ -1546,10 +1680,12 @@ def interact(settings, isings, foods):
                         Ineighbour.food += foods[foodInd].energy * foodshare
                         if settings['energy_model']:
                             Ineighbour.energy += foods[foodInd].energy * foodshare
+                        Ineighbour.foodgiven += foods[foodInd].energy * foodshare
                 else:  # if no neighbours
                     I.food += foods[foodInd].energy
                     if settings['energy_model']:
                         I.energy += foods[foodInd].energy
+                    I.foodfound += 1
             '''
             finess is proportional to energy
             '''

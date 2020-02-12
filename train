@@ -12,6 +12,8 @@ import pickle
 
 
 
+
+
 def create_settings():
 
     args = parse()
@@ -41,7 +43,7 @@ def create_settings():
     
     settings['dt'] = 0.2  # kinetic time step      (dt)
     settings['ddr_max'] = 25  # max rotational acceleration      (degrees per second^2)
-    settings['dr_max'] = 999  # max rotational speed      (degrees per second)
+    settings['dr_max'] = 90  # 999 max rotational speed      (degrees per second)
     settings['dv_max'] = 0.05  # max acceleration (+/-)    (units per second^2)
     settings['v_max'] = args.v_max #999  # 0.5 max velocity              (units per second)
     
@@ -77,7 +79,7 @@ def create_settings():
     #settings['loadfile'] = sim-20191114-000009_server
     settings['loadfile'] = args.loadfile
     settings['iter'] = args.loaditer
-    if settings['loadfile'] is '':
+    if settings['loadfile'] == '':
         settings['LoadIsings'] = False
     else:
         settings['LoadIsings'] = True
@@ -91,8 +93,8 @@ def create_settings():
     
     settings['energy_model'] = not args.no_ener_mod #BOO
     settings['energy_is_fitness'] = args.ener_isfit_mod
-    # settings['v_min'] = args.v_min  # FLOAT [0,1)
-    settings['dv_min'] = args.dv_min  # min acceleration (only used in energy model)
+    settings['v_min'] = args.dv_min  # FLOAT [0,1)
+    # settings['dv_min'] = args.dv_min  # min acceleration (only used in energy model)
     settings['cost_speed'] = args.cost_speed  # FLOAT [0,1] energy cost of speed as a factor of speed #default 0.05
     settings['initial_energy'] = args.init_energy  # Energy that each organism starts with in each simulation
     settings['friction'] = args.friction
@@ -174,7 +176,7 @@ def parse():
 
     parser.set_defaults(save_data=True, plot=False, iterations=2000, time_steps=2000, plot_gens=[], fps=30,
                         loadfile='', loaditer=2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=True,
-                        server_mode=False, cost_speed=0.05, v_max=999.0, dv_min=0.005, friction= 0.01, sig_beta=0.02,
+                        server_mode=False, cost_speed=0.05, v_max=999.0, dv_min=0.05, friction= 0.01, sig_beta=0.02,
                         no_mut_beta=False, init_energy=0, food_energy=1, no_ener_mod=False, ener_isfit_mod=False,
                         share_food_mod=False, zerosum=1)
 
@@ -222,6 +224,7 @@ def run(settings):
         startstr = 'Starting simulation: (' + str(settings['TimeSteps']) + \
                    ' timesteps) x (' + str(Iterations) + ' iterations)'
         print(startstr)
+
         isings = []
         for i in range(0, settings['pop_size']):
             isings.append(ising(settings, size, nSensors, nMotors, name='gen[0]-org[' + str(i) + ']'))
