@@ -87,9 +87,12 @@ def main(loadfiles, plot_var, isings_lists = None, autoLoad = True,
 
         c = cmap(norm(i))
 
-        muF = np.mean(FOOD, axis=1)
-        # ax.plot(iter_list, muF, color=c, label=labels[i])
-        ax.scatter(iter_list, muF, color=c, label=labels[i], alpha=0.15)
+        # muF = np.mean(FOOD, axis=1)
+        # # ax.plot(iter_list, muF, color=c, label=labels[i])
+        # ax.scatter(iter_list, muF, color=c, label=labels[i], alpha=0.15)
+
+        plt.scatter(np.tile(iter_list, (50, 1)), FOOD.transpose(), s=0.1, alpha=0.3, color=c)
+
 
 
         sigmaF = FOOD.std(axis=1)

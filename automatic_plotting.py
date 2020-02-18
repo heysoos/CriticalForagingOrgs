@@ -4,6 +4,7 @@ from automatic_plot_helper import load_isings
 import plot_anything_combined
 import plot_anythingXY_scatter
 from os import path, listdir
+import glob
 
 def main(sim_name, load_isings_list=True):
     settings = load_settings(sim_name)
@@ -40,10 +41,15 @@ if __name__ == '__main__':
     # main(sim_name)
 
     # sim_names = ['sim-20200206-192604-p_50_-t_2000_-g_2000_-a_1999_-ie_2_-ef_-b_1_-zs_1_-fr_0_-n_ANN']
-    folder = 'exp_1'
+
+    folder = 'exp_2'
     d = path.join('save', folder)
     sim_names = [path.join(folder, o) for o in listdir(d)
                  if path.isdir(path.join(d, o))]
+
+    # sim_names = glob.glob('save/sim-20200211*')
+    # sim_names = [os.path.basename(d) for d in sim_names]
+
 
     for s in sim_names:
         main(s)

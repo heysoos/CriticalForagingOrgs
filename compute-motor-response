@@ -10,14 +10,19 @@ import pickle
 
 # --- COMPUTE MOTOR RESPONSE -------------------------------------------------------+
 
-if len(argv) < 5:
-    print("Usage: " + argv[0] + "<sim>" + "<sensInd>" + "<sensor>" + "<gen>")
+if len(argv) < 6:
+    print("Usage: " + argv[0] + "<sim>" + "<moveCase>" + "<sensInd>" + "<sensor>" + "<gen>")
+    exit(1)
+
+if str(argv[2]) not in ("Move", "MoveOld", "MoveVelMot"):
+    print("moveCase needs to be one of Move/MoveOld/MoveVelMot. Currently: " + str(argv[2]))
     exit(1)
 
 loadfile = str(argv[1])
-sensInd = int(argv[2])
-sensor = int(argv[3])
-gen = int(argv[4])
+moveCase = str(argv[2])
+sensInd = int(argv[3])
+sensor = int(argv[4])
+gen = int(argv[5])
 
 def random_senses(sensor):
     # r_food = np.random.uniform(-180, 180)
@@ -32,7 +37,7 @@ def random_senses(sensor):
         if i != sensor:
             I.s[i] = np.random.uniform(-1, 1)
 
-T = 2000
+T = 10000
 R = 5
 Nsens = 100
 mode = 'MonteCarlo'
@@ -70,7 +75,12 @@ for rep in range(R):
 
         for t in range(int(T / 10)):
             random_senses(sensor)
-            I.NoSensorGlauberStep()  # sensor values dont update
+            if settings['ANN']:
+                # update all other neurons a bunch of times
+                for j in range(int(settings['thermalTime'])):
+                    I.ANNStep()
+            else:
+                I.NoSensorGlauberStep()
 
         for t in range(T):
             random_senses(sensor)
@@ -85,15 +95,36 @@ for rep in range(R):
             # -1, 0, 1 for brake, nothing, accelerate
             # dv = (np.sum(I.s[-I.Msize1:]) / 2)
             # dr = (np.sum(I.s[-I.Msize:-I.Msize1]) / 2)
-            I.updateAcceleration()
+            if moveCase == 'Move':
+                # this is the move mode where both motors are acceleration motors
+                I.updateAcceleration()
 
-            Mv += I.dv / float(T)  # dv
-            Mr += I.ddr / float(T)  # dr
+                Mv += I.dv / float(T)  # dv
+                Mr += I.ddr / float(T)  # dr
 
-            # print(I.s[:3])
+                M2v += I.dv ** 2 / float(T)
+                M2r += I.ddr ** 2 / float(T)
+            elif moveCase == 'MoveOld':
+                # this is the move mode with one linear acceleration motor and one rotational velocity motor
+                dv = (np.sum(I.s[-I.Msize1:]) / 2)
+                dr = (np.sum(I.s[-I.Msize:-I.Msize1]) / 2)
 
-            M2v += I.dv ** 2 / float(T)
-            M2r += I.ddr ** 2 / float(T)
+                Mv += I.dv / float(T)  # dv
+                Mr += I.dr / float(T)  # dr
+
+                M2v += I.dv ** 2 / float(T)
+                M2r += I.dr ** 2 / float(T)
+
+            elif moveCase == 'MoveVelMot':
+                # this is the move mode where both motors are velocity motors (same calculation as above)
+                dv = (np.sum(I.s[-I.Msize1:]) / 2)
+                dr = (np.sum(I.s[-I.Msize:-I.Msize1]) / 2)
+
+                Mv += I.dv / float(T)  # dv
+                Mr += I.dr / float(T)  # dr
+
+                M2v += I.dv ** 2 / float(T)
+                M2r += I.dr ** 2 / float(T)
 
         data['MV'][rep, agentNum] = Mv
         data['MR'][rep, agentNum] = Mr

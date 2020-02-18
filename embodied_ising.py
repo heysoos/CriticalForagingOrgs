@@ -75,6 +75,7 @@ class ising:
         self.dy = 0
 
         self.name = name
+        self.generation = 0
         '''
         initial beta
         '''
@@ -117,13 +118,11 @@ class ising:
         self.all_velocity = 0
         self.avg_velocity = 0
         self.v = 0.0
-        self.dr = 0
 
         if settings['share_food']:
             self.foodfound = 0
             self.foodshared = 0
             self.foodgiven = 0
-
 
         self.assign_critical_values(settings)
 
@@ -484,8 +483,8 @@ class ising:
             self.ANNStep()
 
         # self.Move(settings)  # move organism at end
-        self.MoveOld(settings)
-        # self.MoveVelMotors(settings)
+        # self.MoveOld(settings)
+        self.MoveVelMotors(settings)
 
     # update everything except sensors
     def NoSensorGlauberStep(self):
@@ -650,7 +649,9 @@ class ising:
                 jj = j[randindex]
 
                 # self.J[ii, jj] = np.random.uniform(-1, 1) * self.max_weights
-                self.J[ii, jj] = np.clip(self.J[ii, jj] * np.random.normal(),
+                # self.J[ii, jj] = np.clip(self.J[ii, jj] * np.random.normal(),
+                #                          -self.max_weights, self.max_weights)
+                self.J[ii, jj] = np.clip(self.J[ii, jj] + np.random.normal(loc=0, scale=settings['mutationSigma']),
                                          -self.max_weights, self.max_weights)
 
         # MUTATE RANDOM EDGE
@@ -661,7 +662,9 @@ class ising:
         jj = j[randindex]
 
         # self.J[ii, jj] = np.random.uniform(-1, 1) * self.max_weights
-        self.J[ii, jj] = np.clip(self.J[ii, jj] * np.random.normal(),
+        # self.J[ii, jj] = np.clip(self.J[ii, jj] * np.random.normal(),
+        #                          -self.max_weights, self.max_weights)
+        self.J[ii, jj] = np.clip(self.J[ii, jj] + np.random.normal(loc=0, scale=settings['mutationSigma']),
                                  -self.max_weights, self.max_weights)
         #Mutation of weights--> mutated weight is generated randomly from scratch
 
@@ -810,6 +813,7 @@ def TimeEvolve(isings, foods, settings, folder, rep):
 
     for I in isings:
         I.reset_state(settings)
+        I.generation = rep
 
     T = settings['TimeSteps']
     # for I in isings:
@@ -1201,10 +1205,10 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
                 fit_func_param_name = 'eat_rate'
 
             if settings['mutateB']:
-                print('\n', count, '|', fit_func_param_name, eat_rate, 'mean_Beta', mBeta,
-                      'std_Beta', stdBeta, 'min_Beta', minBeta, 'max_Beta', maxBeta)
+                print(f'{count} | {fit_func_param_name} {eat_rate:.2f} '
+                      f'mean_Beta {mBeta:.3f} std_Beta {stdBeta:.3f} min_Beta {minBeta:.3f} max_Beta {maxBeta:.3f}')
             else:
-                print('\n', count, '|', fit_func_param_name, eat_rate)
+                print(f'{count} | {fit_func_param_name} {eat_rate:.2f}')
 
             if settings['save_data']:
                 if settings['energy_model']:

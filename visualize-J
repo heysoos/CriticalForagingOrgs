@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colors
 import pickle
 from os import path, makedirs, listdir
+import glob
 
 # beta-1/sim-20180511-163319
 # beta-10/sim-20180512-105824
@@ -15,18 +16,21 @@ from os import path, makedirs, listdir
 #              'beta_experiment/beta-0-1/sim-20180512-105719']
 
 
-folder = 'exp_1'
+folder = 'exp_2'
 d = path.join('save', folder)
 loadfiles = [path.join(folder, o) for o in listdir(d)
              if path.isdir(path.join(d, o))]
 
-iter_list = np.arange(0, 2000, 1)
+# loadfiles = glob.glob('save/sim-20200211*')
+# loadfiles = [path.basename(d) for d in loadfiles]
+
+iter_list = np.arange(0, 8000, 1)
 numAgents = 50
 numNeurons = 10
 
 autoLoad = True
-alpha = 0.02 # 1 / len(iter_list)
-markersize = 1.7
+alpha = 0.01 # 1 / len(iter_list)
+markersize = 0.5
 cmap = plt.get_cmap('plasma')
 
 
