@@ -10,9 +10,10 @@ def main(sim_name, load_isings_list=True):
     settings = load_settings(sim_name)
     if load_isings_list:
         isings_list = load_isings(sim_name)
-    plot_anything_auto(sim_name, ['Beta', 'avg_velocity', 'food'], settings, isings_list = isings_list, autoLoad=False)
-    plot_var_tuples = [('Beta', 'avg_velocity'), ('avg_energy', 'avg_velocity'), ('avg_energy', 'food')]
-    plot_scatter_auto(sim_name, settings, plot_var_tuples, isings_list, autoLoad=False)
+    plot_anything_auto(sim_name, ['Beta', 'avg_velocity', 'food', 'foodfound', 'foodshared', 'foodgiven'],
+                       settings, isings_list = isings_list, autoLoad=False)
+    # plot_var_tuples = [('Beta', 'avg_velocity'), ('avg_energy', 'avg_velocity'), ('avg_energy', 'food')]
+    # plot_scatter_auto(sim_name, settings, plot_var_tuples, isings_list, autoLoad=False)
 
 def plot_scatter_auto(sim_name, settings, plot_var_tuples, isings_list, autoLoad = True):
     for plot_var_x, plot_var_y in plot_var_tuples:
@@ -40,14 +41,14 @@ if __name__ == '__main__':
     # sim_name = 'sim-20200120-004759-p_50_-t_2000_-g_8000_-a_7999_-ie_2_-ef_-sf_-zs_1_-n_ANN_energy_is_fitness_Beta_foodshare'
     # main(sim_name)
 
-    # sim_names = ['sim-20200206-192604-p_50_-t_2000_-g_2000_-a_1999_-ie_2_-ef_-b_1_-zs_1_-fr_0_-n_ANN']
+    # sim_names = ['sim-20200218-182017-p_50_-t_2000_-g_2000_-a_500_1000_2000_-b_1_-vma_5_-ie_2_-ef_-sf_-zs_1_-n_MoveOldVmin0.05']
 
-    folder = 'exp_2'
+    folder = 'exp_3'
     d = path.join('save', folder)
     sim_names = [path.join(folder, o) for o in listdir(d)
                  if path.isdir(path.join(d, o))]
 
-    # sim_names = glob.glob('save/sim-20200211*')
+    # sim_names = glob.glob('save/sim-20200218*')
     # sim_names = [os.path.basename(d) for d in sim_names]
 
 

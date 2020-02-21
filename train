@@ -70,7 +70,7 @@ def create_settings():
     # how should organisms repopulate, duplicate or mate?
     settings['mateDupRatio'] = 0.5
     settings['mutationRateDup'] = 0.1  # DUPLICATION mutation rate
-    settings['mutationSigma'] = 0.1  # sigma for normal distribution during edge-weight mutation events
+    settings['mutationSigma'] = 1  # sigma for normal distribution during edge-weight mutation events
 
     settings['init_beta'] = args.init_beta
     settings['mutateB'] = not args.no_mut_beta  # toggle to allow Beta (temperature) mutations (toggle off if critical learning is on)

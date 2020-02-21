@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-from os import path, makedirs
+from os import path, makedirs, listdir
 # beta-1/sim-20180511-163319
 # beta-10/sim-20180512-105824
 # beta-0-1/sim-20180512-105719
@@ -13,134 +13,141 @@ def dec2bin(num,num_digits):
     frmt += 'b}'
     return frmt.format(num)
 
-loadfile = 'sim-20200119-004553-p_50_-t_2000_-g_4000_-a_3999_-ie_2_-ef_-sf_-zs_0_-n_ANN_energy_is_fitness_Beta_foodshare'
-gen = 1999
-# motor = 'dr'
-sensorInd = 0
-sensorNames = ['r_food', 'd_food', 'org_sens']
-sensor = sensorNames[sensorInd]
+# loadfile = 'exp_2/sim-20200211-200557-p_50_-t_2000_-g_8000_-a_500_1000_2000_7999_-b_1_-vma_5_-ie_2_-ef_-sf_-zs_0_-n_MoveOldVmin0.05'
 
-plt.rc('text', usetex=True)
-font = {'family': 'serif', 'size': 15, 'serif': ['computer modern roman']}
-plt.rc('font', **font)
-plt.rc('legend', **{'fontsize': 16})
+folder = 'exp_2'
+d = path.join('save', folder)
+loadfiles = [path.join(folder, o) for o in listdir(d)
+             if path.isdir(path.join(d, o))]
 
-R = 5
+for loadfile in loadfiles:
+    for gen in (0, 500, 2000, 7999):
+        for sensorInd in range(0, 3):
+            # sensorInd = 0
+            sensorNames = ['r_food', 'd_food', 'org_sens']
+            sensor = sensorNames[sensorInd]
 
-Nsens = 100
-sens = np.linspace(-1, 1, Nsens)
-numAgents = 50
+            plt.rc('text', usetex=True)
+            font = {'family': 'serif', 'size': 15, 'serif': ['computer modern roman']}
+            plt.rc('font', **font)
+            plt.rc('legend', **{'fontsize': 16})
 
-fontsize = 20
+            R = 1
 
-d = np.dtype([('MV', 'f8'), ('MR', 'f8'), ('CMV', 'f8'), ('CMR', 'f8')])
-data = np.zeros((R, numAgents, Nsens), dtype=d)
+            Nsens = 100
+            sens = np.linspace(-1, 1, Nsens)
+            numAgents = 50
 
-# folder = 'save/' + loadfile + '/Motor_Response_' + motor + '/gen_' + str(gen) + '/'
-folder = 'save/' + loadfile + '/Motor_Response/gen_' + str(gen) + '/' + str(sensorInd) + '/'
+            fontsize = 20
 
-for sensInd in np.arange(1, Nsens):
-    file = 'MR-' + 'Nsens_' + str(Nsens) + \
-           '-sensInd_' + str(sensInd) + \
-           '-gen_' + str(gen) + \
-           '.npy'
-    filename = folder + file
+            d = np.dtype([('MV', 'f8'), ('MR', 'f8'), ('CMV', 'f8'), ('CMR', 'f8')])
+            data = np.zeros((R, numAgents, Nsens), dtype=d)
 
-    data[:, :, sensInd] = np.load(filename)
+            # folder = 'save/' + loadfile + '/Motor_Response_' + motor + '/gen_' + str(gen) + '/'
+            folder = 'save/' + loadfile + '/Motor_Response/gen_' + str(gen) + '/' + str(sensorInd) + '/'
 
+            for sensInd in np.arange(1, Nsens):
+                file = 'MR-' + 'Nsens_' + str(Nsens) + \
+                       '-sensInd_' + str(sensInd) + \
+                       '-gen_' + str(gen) + \
+                       '.npy'
+                filename = folder + file
 
-fig, ax = plt.subplots(2, 2, figsize=(14, 10), sharex=False)
-if sensor == 'r_food':
-    fig.text(0.5, 0.04, 'Sensory Activation (food angle)', ha='center', fontsize=fontsize)
-elif sensor == 'd_food':
-    fig.text(0.5, 0.04, 'Sensory Activation (food distance)', ha='center', fontsize=fontsize)
-elif sensor == 'org_sens':
-    fig.text(0.5, 0.04, 'Sensory Activation (proximity sensor)', ha='center', fontsize=fontsize)
-
-fig.text(0.04, 0.72, 'Motor Response', va='center', rotation='vertical', fontsize=fontsize)
-fig.text(0.04, 0.28, 'Motor Susceptiblity', va='center', rotation='vertical', fontsize=fontsize)
+                data[:, :, sensInd] = np.load(filename)
 
 
-title = 'Motor Response (dv, d$\omega$) of Foraging Community\n Generation: ' + str(gen)
-fig.suptitle(title)
+            fig, ax = plt.subplots(2, 2, figsize=(14, 10), sharex=False)
+            if sensor == 'r_food':
+                fig.text(0.5, 0.04, 'Sensory Activation (food angle)', ha='center', fontsize=fontsize)
+            elif sensor == 'd_food':
+                fig.text(0.5, 0.04, 'Sensory Activation (food distance)', ha='center', fontsize=fontsize)
+            elif sensor == 'org_sens':
+                fig.text(0.5, 0.04, 'Sensory Activation (proximity sensor)', ha='center', fontsize=fontsize)
 
-b = 0
-alpha = 0.1
-if sensor == 'r_food':
-    theta = sens * 180
-    xticks = [-180, -90, 0, 90, 180]
-elif sensor == 'd_food':
-    # dist = np.sqrt( 1 / ( np.arctanh( (sens + 1 ) / 2 ) ) - 1e-6 )  #  plot as a function of distance
-    # # xticks = [np.min(dist[1:-1]), 1, 2, 4, np.max(dist[1:-1])]
-    # xticks = [0.5, 1, 2, 4, 9]
+            fig.text(0.04, 0.72, 'Motor Response', va='center', rotation='vertical', fontsize=fontsize)
+            fig.text(0.04, 0.28, 'Motor Susceptiblity', va='center', rotation='vertical', fontsize=fontsize)
 
 
-    xticks = [-1, -0.5, 0, 0.5, 1]
-    dist = sens
-elif sensor == 'org_sens':
-    xticks = [-1, -0.5, 0, 0.5, 1]
+            title = 'Motor Response (dv, d$\omega$) of Foraging Community\n Generation: ' + str(gen)
+            fig.suptitle(title)
+
+            b = 0
+            alpha = 0.1
+            if sensor == 'r_food':
+                theta = sens * 180
+                xticks = [-180, -90, 0, 90, 180]
+            elif sensor == 'd_food':
+                # dist = np.sqrt( 1 / ( np.arctanh( (sens + 1 ) / 2 ) ) - 1e-6 )  #  plot as a function of distance
+                # # xticks = [np.min(dist[1:-1]), 1, 2, 4, np.max(dist[1:-1])]
+                # xticks = [0.5, 1, 2, 4, 9]
 
 
-for iplot, name in enumerate(d.names):
-    x = int(dec2bin(iplot, 2)[0])
-    y = int(dec2bin(iplot, 2)[1])
-
-    # meanData = np.mean(np.mean(data[name][:, :, 1:],  # average across repitions
-    #                                axis=0), axis=0)
-    # if motor == 'dr':
-    #     ax[x, y].plot(
-    #         theta[1:], meanData, color=[0, 0, 0], linewidth=4)
-    # else:
-    #     ax[x, y].plot(
-    #         dist[1:], meanData, color=[0, 0, 0], linewidth=4)
-
-    for i in range(0, 50):
-
-        if sensor == 'r_food':
-
-            ax[x, y].scatter(
-                theta[1:], np.mean(data[name][:, i, 1:],  # average across repitions
-                              axis=0), color=[b, b, b], s=30, alpha=alpha)
-        elif sensor == 'd_food':
-            ax[x, y].scatter(
-                dist[1:], np.mean(data[name][:, i, 1:],  # average across repitions
-                                   axis=0), color=[b, b, b], s=30, alpha=alpha)
-        elif sensor == 'org_sens':
-            ax[x, y].scatter(
-                sens[1:], np.mean(data[name][:, i, 1:],  # average across repitions
-                                  axis=0), color=[b, b, b], s=30, alpha=alpha)
-
-            if sensor == 'd_food':
-                ax[x, y].set_xscale("log", nonposx='clip')
-        ax[x, y].set_xticks(xticks)
-        ax[x, y].get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
-        # ax[x, y].set_title(name)
-
-ax[0, 0].set_title(r'$dv$')
-ax[0, 1].set_title(r'$d\omega$')
-ax[1, 0].set_title(r'$\sigma^2(dv)$')
-ax[1, 1].set_title(r'$\sigma^2(d\omega)$')
-
-manager = plt.get_current_fig_manager()
-manager.resize(*manager.window.maxsize())
-
-#
-# for i in range(2):
-#     for j in range(2):
-#         # ax[i, j].set_xscale("log", nonposx='clip')
-#         ax[i, j].set_xticks(xticks)
-#         ax[i, j].xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
-#         ax[i, j].xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
-#
-# # plt.axis([0.1, 10, -0.02, 1.5*np.max(meanC)])
+                xticks = [-1, -0.5, 0, 0.5, 1]
+                dist = sens
+            elif sensor == 'org_sens':
+                xticks = [-1, -0.5, 0, 0.5, 1]
 
 
-# plt.axis([-1, 1, -1, 1])
-figfolder = 'save/' + loadfile + '/figs/Motor_Response/'
-if not path.exists(figfolder):
-    makedirs(figfolder)
+            for iplot, name in enumerate(d.names):
+                x = int(dec2bin(iplot, 2)[0])
+                y = int(dec2bin(iplot, 2)[1])
 
-figname = figfolder + sensor + '-gen-' + str(gen) + '.png'
+                # meanData = np.mean(np.mean(data[name][:, :, 1:],  # average across repitions
+                #                                axis=0), axis=0)
+                # if motor == 'dr':
+                #     ax[x, y].plot(
+                #         theta[1:], meanData, color=[0, 0, 0], linewidth=4)
+                # else:
+                #     ax[x, y].plot(
+                #         dist[1:], meanData, color=[0, 0, 0], linewidth=4)
 
-plt.savefig(figname, bbox_inches='tight', dpi=150)
-plt.show()
+                for i in range(0, 50):
+
+                    if sensor == 'r_food':
+
+                        ax[x, y].scatter(
+                            theta[1:], np.mean(data[name][:, i, 1:],  # average across repitions
+                                          axis=0), color=[b, b, b], s=30, alpha=alpha)
+                    elif sensor == 'd_food':
+                        ax[x, y].scatter(
+                            dist[1:], np.mean(data[name][:, i, 1:],  # average across repitions
+                                               axis=0), color=[b, b, b], s=30, alpha=alpha)
+                    elif sensor == 'org_sens':
+                        ax[x, y].scatter(
+                            sens[1:], np.mean(data[name][:, i, 1:],  # average across repitions
+                                              axis=0), color=[b, b, b], s=30, alpha=alpha)
+
+                        if sensor == 'd_food':
+                            ax[x, y].set_xscale("log", nonposx='clip')
+                    ax[x, y].set_xticks(xticks)
+                    ax[x, y].get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+                    # ax[x, y].set_title(name)
+
+            ax[0, 0].set_title(r'$dv$')
+            ax[0, 1].set_title(r'$d\omega$')
+            ax[1, 0].set_title(r'$\sigma^2(dv)$')
+            ax[1, 1].set_title(r'$\sigma^2(d\omega)$')
+
+            manager = plt.get_current_fig_manager()
+            manager.resize(*manager.window.maxsize())
+
+            #
+            # for i in range(2):
+            #     for j in range(2):
+            #         # ax[i, j].set_xscale("log", nonposx='clip')
+            #         ax[i, j].set_xticks(xticks)
+            #         ax[i, j].xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
+            #         ax[i, j].xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
+            #
+            # # plt.axis([0.1, 10, -0.02, 1.5*np.max(meanC)])
+
+
+            # plt.axis([-1, 1, -1, 1])
+            figfolder = 'save/' + loadfile + '/figs/Motor_Response/'
+            if not path.exists(figfolder):
+                makedirs(figfolder)
+
+            figname = figfolder + sensor + '-gen-' + str(gen) + '.png'
+
+            plt.savefig(figname, bbox_inches='tight', dpi=150)
+            plt.close()

@@ -422,14 +422,18 @@ class ising:
         af = lambda x: np.tanh(x)  # activation function
         Jhm = self.J + np.transpose(self.J)  # connectivity for hidden/motor layers
 
+
         Jh = Jhm[:, self.Ssize:-self.Msize]  # inputs to hidden neurons
         Jm = Jhm[:, -self.Msize:]  # inputs to motor neurons
 
+        bh = self.h[self.Ssize:-self.Msize]  # biases for hidden neurons
+        bm = self.h[-self.Msize:]  # biases for motor neurons
+
         # activate and update
-        new_h = af(self.Beta*np.dot(self.s, Jh))
+        new_h = af( self.Beta * ( np.dot(self.s, Jh) + bh ) )
         self.s[self.Ssize:-self.Msize] = new_h
 
-        new_m = af(np.dot(self.s, Jm))
+        new_m = af( np.dot(self.s, Jm) + bm )
         self.s[-self.Msize:] = new_m
 
         #  TODO: non-symmetric Jhm, need to change through to GA
@@ -668,10 +672,17 @@ class ising:
                                  -self.max_weights, self.max_weights)
         #Mutation of weights--> mutated weight is generated randomly from scratch
 
+        # MUTATE NEURON BIASES (local field h)
+        i = np.nonzero(self.maskh)[0]
+        randindex = np.random.randint(0, len(i))
+        ii = i[randindex]
+        self.h[ii] = np.random.uniform(-1, 1)
+
         # MUTATE LOCAL TEMPERATURE
         if settings['mutateB']:
             deltaB = np.abs(np.random.normal(1, settings['sigB']))
             self.Beta = self.Beta * deltaB  #TODO mutate beta not by multiplying? How was Beta modified originally?
+
 
 
 class food():
