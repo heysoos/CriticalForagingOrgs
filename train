@@ -27,7 +27,7 @@ def create_settings():
     settings['food_radius'] = 0.03
     settings['food_energy'] = args.food_energy
     settings['org_radius'] = 0.05
-    settings['ANN'] = True  # Use ANN or Ising?
+    settings['ANN'] = args.ANN  # Use ANN or Ising?
     settings['BoidOn'] = False  # Only use Boid model? #True
 
     settings['server_mode'] = args.server_mode
@@ -68,9 +68,13 @@ def create_settings():
     # how many hidden neurons are not connected to each other
     settings['numDisconnectedNeurons'] = 0 #  int((settings['size'] - settings['nSensors'] - settings['nMotors']) / 1.2)
     # how should organisms repopulate, duplicate or mate?
-    settings['mateDupRatio'] = 0.5
+    settings['mateDupRatio'] = 0  # default: 0.5. Set to 0 to remove any mating
     settings['mutationRateDup'] = 0.1  # DUPLICATION mutation rate
     settings['mutationSigma'] = 1  # sigma for normal distribution during edge-weight mutation events
+
+    settings['addNeuronRate'] = args.add_neuron_rate
+    settings['add_one_neuron_time'] = args.add_one_neuron_time
+    settings['add_one_neuron'] = args.add_one_neuron
 
     settings['init_beta'] = args.init_beta
     settings['mutateB'] = not args.no_mut_beta  # toggle to allow Beta (temperature) mutations (toggle off if critical learning is on)
@@ -171,6 +175,15 @@ def parse():
                         help='''Share food with other organisms in a small radius.''')
     parser.add_argument('-zs', '--zerosum', dest='zerosum', type=float,
                         help='''Zero-sum game or not. Takes values between 0 and 1, 1 being zero-sum.''')
+    parser.add_argument('-anr', '--add_neuron_rate', dest='add_neuron_rate', type=float,
+                        help='''Probablity to add a new neuron to a network.''')
+    parser.add_argument('-aon', '--add_one_neuron', dest='add_one_neuron', action='store_true',
+                        help='''Activate the ability to add a single neuron once.''')
+    parser.add_argument('-aont', '--add_one_neuron_time', dest='add_one_neuron_time', type=int,
+                        help='''The time at which a single neuron is added to all the agents' networks.''')
+
+    parser.add_argument('-ann', dest='ANN', action='store_true',
+                        help='''Use the ANN model (instead of the Ising model).''')
     parser.add_argument('-n', '--name', dest='savename', help='Optional name for the folder')
 
     #-n does not do anything in the code as input arguments already define name of folder. Practical nonetheless.
@@ -179,7 +192,8 @@ def parse():
                         loadfile='', loaditer=2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=True,
                         server_mode=False, cost_speed=0.05, v_max=999.0, dv_min=0.05, friction= 0.01, sig_beta=0.02,
                         no_mut_beta=False, init_energy=0, food_energy=1, no_ener_mod=False, ener_isfit_mod=False,
-                        share_food_mod=False, zerosum=1)
+                        share_food_mod=False, zerosum=1, add_neuron_rate=0, add_one_neuron=False, add_one_neuron_time=int(2000),
+                        ANN=False)
 
     # parser.set_defaults(save_data=True, plot=False, iterations=1, time_steps=2000, plot_gens=[], fps=20,
     #                     loadfile='', loaditer=2000, pop_size=50, food_num=100, init_beta=1.0, no_seasons=False,
@@ -203,7 +217,7 @@ def run(settings):
     # LOAD ISING CORRELATIONS
     # filename = 'correlations-ising2D-size400.npy'
     filename2 = 'correlations-ising-generalized-size83.npy'
-    settings['Cdist'] = np.load(filename2)
+    # settings['Cdist'] = np.load(filename2)
 
     # --- POPULATE THE ENVIRONMENT WITH FOOD ---------------+
     foods = []

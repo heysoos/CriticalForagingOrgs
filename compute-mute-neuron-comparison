@@ -1,0 +1,102 @@
+#!/usr/bin/env python
+
+from embodied_ising import ising, TimeEvolve, food
+import numpy as np
+from sys import argv
+from os import path, makedirs
+from copy import deepcopy
+
+import csv
+
+import pickle
+import glob
+
+# --- COMPUTE MUTED-NEURON FITNESS DIFFERENTIAL -------------------------------------------------------+
+
+
+loadfile = str(argv[1]) #
+iterNum = int(argv[2]) #beta index
+# iterNum = int(argv[3]) #Generation numbers
+
+# loadfile = 'sim-20201118-200855-p_100_-t_2000_-g_4000_-a_3999_-b_1_-vma_5_-ie_2_-ef_-ann_-aon_--add_one_neuron_time_2000_-n_MoveVelMot'
+# iterNum = 2000
+R = 2 # Number of Repetitions
+T = 2000 # Number of timesteps
+
+# ising_dir = 'save/' + loadfile
+ising_dir = loadfile
+loadstr = ising_dir + 'isings/gen[' + str(iterNum) + ']-isings.pickle'
+loadstr_set = ising_dir + 'settings.pickle'
+
+isings = pickle.load(open(loadstr, 'rb'))
+
+settings = pickle.load(open(loadstr_set, 'rb'))
+
+# settings =
+numAgents = len(isings)
+
+out = {'filename': loadfile,
+       'iterNum': iterNum,
+       'T': T,
+       'R': R,
+       }
+
+# mute some isings
+isings_muted = deepcopy(isings)
+for I in isings_muted:
+    ind = -(I.Msize + 1)
+    I.J[ind, :] = 0
+    I.J[:, ind] = 0
+
+settings['TimeSteps'] = T
+settings['plot'] = False
+
+
+eat_rate = []
+eat_rate_muted = []
+for rep in range(R):
+
+    # no muting
+    foods = []
+    for i in range(0, settings['food_num']):
+        foods.append(food(settings))
+
+    TimeEvolve(isings, foods, settings, ising_dir, 1)
+
+    for I in isings:
+        I.avg_energy = np.median(I.energies)  # Average or median better?
+        I.avg_velocity = I.all_velocity / settings['TimeSteps']
+
+    eat_rate.append(np.average([I.avg_energy for I in isings]))
+
+    # with muting
+    foods = []
+    for i in range(0, settings['food_num']):
+        foods.append(food(settings))
+    TimeEvolve(isings_muted, foods, settings, ising_dir, 1)
+
+    for I in isings_muted:
+        I.avg_energy = np.median(I.energies)  # Average or median better?
+        I.avg_velocity = I.all_velocity / settings['TimeSteps']
+
+    eat_rate_muted.append(np.average([I.avg_energy for I in isings_muted]))
+
+out['eat_rate'] = eat_rate
+out['eat_rate_muted'] = eat_rate_muted
+
+
+folder = loadfile + '/muted_fitness/'
+file = 'muted-fitness_gen_' + str(iterNum) + '-TimeSteps-' + \
+       str(T) + '.pickle'
+filename = folder + file
+
+if not path.exists(folder):
+    makedirs(folder)
+
+
+pickle_out = open(filename, 'wb')
+pickle.dump(out, pickle_out)
+pickle_out.close()
+
+# savestr = 'Saving: ./.../' + file
+# print(savestr)

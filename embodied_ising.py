@@ -29,6 +29,7 @@ import time
 #import random
 from tqdm import tqdm
 from shutil import copyfile
+from numba import jit
 
 
 
@@ -48,7 +49,7 @@ class ising:
         self.Msize = Nmotors  # Number of sensors
         self.radius = settings['org_radius']
 
-        self.h = np.zeros(netsize) # TODO: is this bias, does this ever go over [0 0 0 0 0]???????
+        self.h = np.zeros(netsize) #
 
         # self.J = np.zeros((self.size, self.size))
 
@@ -107,6 +108,8 @@ class ising:
         self.maskh = np.ones(self.size, dtype=bool)
         self.maskh[0:self.Ssize] = False
 
+        self.m = np.zeros(self.size)
+
         self.d_food = self.maxRange  # distance to nearest food
         self.r_food = 0  # orientation to nearest food
         self.org_sens = 0 # directional, 1/distance ** 2 weighted organism sensor
@@ -134,6 +137,7 @@ class ising:
 
         # randomize internal state (not using self.random_state since it also randomizes sensors)
         self.s = np.random.random(size=self.size) * 2 - 1
+        self.m = np.zeros(self.size)
         # randomize position (not using self.randomize_position function since it also randomizes velocity)
         self.xpos = uniform(settings['x_min'], settings['x_max'])  # position (x)
         self.ypos = uniform(settings['y_min'], settings['y_max'])  # position (y)
@@ -459,6 +463,19 @@ class ising:
         for i in np.random.permutation(self.size):
             self.Update(settings, i)
 
+    def SequentialGlauberStepFastHelper(self, settings):
+        thermalTime = int(settings['thermalTime'])
+        self.UpdateSensors(settings)
+
+        self.s = SequentialGlauberStepFast(thermalTime, self.s, self.h, self.J, self.Beta, self.Ssize, self.size)
+        self.MoveOld(settings)
+
+    def ANNStepFastHelper(self, settings):
+        thermalTime = int(settings['thermalTime'])
+        self.UpdateSensors(settings)
+
+        self.s = ANNStepfast(thermalTime, self.s, self.h, self.J, self.Beta, self.Ssize, self.Msize)
+        self.MoveVelMotors(settings)
 
     # Update all states of the system without restricted influences
     def SequentialGlauberStep(self, settings):
@@ -620,10 +637,13 @@ class ising:
                 self.J[ii, jj] = 0
 
                 # TODO: is this a good way of making the code multi-purpose?
+
+                '''
                 try:
                     self.C1[ii, jj] = 0
                 except NameError:
                     pass
+                '''
 
             else:
                 print('Connectivity Matrix Empty! Mutation Blocked.')
@@ -640,10 +660,13 @@ class ising:
                 self.J[ii, jj] = np.random.uniform(-1, 1) * self.max_weights
                 # I.J[ii, jj] = np.random.uniform(np.min(I.J[I.Ssize:-I.Msize, I.Ssize:-I.Msize]) / 2,
                 #                                 np.max(I.J[I.Ssize:-I.Msize, I.Ssize:-I.Msize]) * 2)
+
+                '''
                 try:
                     self.C1[ii, jj] = settings['Cdist'][np.random.randint(0, len(settings['Cdist']))]
                 except NameError:
                     pass
+                '''
 
             else:  # if connectivity matrix is full, just change an already existing edge
                 i, j = np.nonzero(connected)
@@ -683,6 +706,125 @@ class ising:
             deltaB = np.abs(np.random.normal(1, settings['sigB']))
             self.Beta = self.Beta * deltaB  #TODO mutate beta not by multiplying? How was Beta modified originally?
 
+    def add_neuron(self, settings):
+        # add a new disconnected neuron to the neural network
+        index = self.size - self.Msize  # index to insert 0 in
+
+        # size
+        self.size += 1
+
+        # J, maskJ
+        self.J = self.insert_empty_row_col(self.J, index)
+
+        choices = np.arange(self.size)
+        choices = choices[choices!=index]
+        edge_index = np.random.choice(choices)
+        index_coord = np.sort([index, edge_index])  # sorting to place in upper triangle
+        self.J[index_coord[0], index_coord[1]] = np.random.uniform()*2 - 1
+
+
+        self.maskJ = self.insert_empty_row_col(self.maskJ, index)
+        self.maskJ[0:-self.Msize, -(self.Msize + 1)] = True
+        self.maskJ[-(self.Msize + 1), -(self.Msize + 1):] = True
+
+        # h, maskh
+        self.h = np.insert(self.h, index, 0)
+        self.maskh = np.insert(self.maskh, index, True)
+
+        self.randomize_state()
+
+        ## TODO: there may be a few measurements that still need to update to the new size.
+
+    def rem_neuron(self, settings):
+        # remove a neuron from the neural network
+        index = np.random.randint(self.Ssize, self.size - self.Msize)
+
+        delmask = np.ones(self.J.shape, dtype='bool')
+        delmask[index, :] = False
+        delmask[:, index] = False
+
+        # J, maskJ
+        self.J = self.J[delmask]
+        self.maskJ = self.maskJ[delmask]
+        # h, maskh
+        self.h = np.delete(self.h, index)
+        self.maskh = np.delete(self.maskh, index)
+        # size
+        self.size -= 1
+        self.randomize_state()
+
+
+
+    def insert_empty_row_col(self, mat, index):
+        # new_size = mat.shape[0] + 1 # assuming square matrix
+        # new_mat = np.zeros((new_size, new_size))
+        #
+        # # top-left quadrant
+        # new_mat[:-(index + 1), :-(index + 1)] = mat[:-index, :-index]
+        # # bottom right quadrant
+        # new_mat[-index:, -index:] = mat[-index:, -index:]
+        # # bottom left quadrant
+        # new_mat[-index:, :-(index + 1)] = mat[-index:, :-index]
+        # # top right quadrant
+        # new_mat[:-(index + 1), -index] = mat[:-index:, -index]
+
+        if mat.dtype == 'bool':
+            new_mat = np.insert(mat, index, False, axis=0)
+            new_mat = np.insert(new_mat, index, False, axis=1)
+        elif mat.dtype == 'float64':
+            new_mat = np.insert(mat, index, 0, axis=0)
+            new_mat = np.insert(new_mat, index, 0, axis=1)
+        else:
+            print('Error inserting value in array! Wrong dtype!')
+
+        return new_mat
+
+
+@jit(nopython=True)
+def SequentialGlauberStepFast(thermalTime, s, h, J, Beta, Ssize, size):
+    all_neurons_except_sens = np.arange(Ssize, size)
+    #perms_list = np.array([np.random.permutation(np.arange(Ssize, size)) for j in range(thermalTime)])
+    random_vars = np.random.rand(thermalTime, len(all_neurons_except_sens)) #[np.random.rand() for i in perms]
+    for i in range(thermalTime):
+        #perms = perms_list[i]
+        #Prepare a matrix of random variables for later use
+        perms = np.random.permutation(np.arange(Ssize, size))
+        for j, perm in enumerate(perms):
+            rand = random_vars[i, j]
+            eDiff = 2 * s[perm] * (h[perm] + np.dot(J[perm, :] + J[:, perm], s))
+            #deltaE = E_f - E_i = -2 E_i = -2 * - SUM{J_ij*s_i*s_j}
+            #self.J[i, :] + self.J[:, i] are added because value in one of both halfs of J seperated by the diagonal is zero
+
+            if Beta * eDiff < np.log(1.0 / rand - 1):
+                #transformed  P = 1/(1+e^(deltaE* Beta)
+                s[perm] = -s[perm]
+
+    return s
+
+@jit(nopython=True)
+def ANNStepfast(thermalTime, s, h, J, Beta, Ssize, Msize):
+    # SIMPLE MLP
+    # TODO: add biases (add to GA as well)
+
+    af = lambda x: np.tanh(x)  # activation function
+
+    for i in range(thermalTime):
+        Jhm = J + np.transpose(J)  # connectivity for hidden/motor layers
+
+        Jh = Jhm[:, Ssize:-Msize]  # inputs to hidden neurons
+        Jm = Jhm[:, -Msize:]  # inputs to motor neurons
+
+        bh = h[Ssize:-Msize]  # biases for hidden neurons
+        bm = h[-Msize:]  # biases for motor neurons
+
+        # activate and update
+        new_h = af(Beta * (np.dot(s, Jh) + bh))
+        s[Ssize:-Msize] = new_h
+
+        new_m = af(np.dot(s, Jm) + bm)
+        s[-Msize:] = new_m
+
+    return s
 
 
 class food():
@@ -887,9 +1029,14 @@ def TimeEvolve(isings, foods, settings, folder, rep):
                 if settings['ANN']:
                     for I in isings:
                         I.ANNUpdate(settings)
+                        # [I.ANNStepFastHelper(settings) for I in isings]
+                        # I.m += I.s
                 else:
                     for I in isings:
-                        I.SequentialGlauberStep(settings)
+                        # I.SequentialGlauberStep(settings)
+                        [I.SequentialGlauberStepFastHelper(settings) for I in isings]
+
+        # I.m /= T
                 
             
             
@@ -1171,6 +1318,12 @@ def EvolutionLearning(isings, foods, settings, Iterations = 1):
         else:
             settings['plot'] = False
 
+        # add a single neuron to all agents at the designated time
+        if rep == settings['add_one_neuron_time']:
+            if settings['add_one_neuron']:
+                print('\nAdding one neuron to all agents...\n')
+                [I.add_neuron(settings) for I in isings]
+
         TimeEvolve(isings, foods, settings, folder, rep)
 
         fitness, fitness_stat = food_fitness(isings)
@@ -1395,7 +1548,8 @@ def evolve(settings, I_old, gen):
         random_index = sample(candidateDup, 1)[0]
 
         name = copy.deepcopy(I_sorted[random_index].name) + 'm'
-        I_new.append(ising(settings, size, nSensors, nMotors, name))
+        I_size = I_sorted[random_index].size
+        I_new.append(ising(settings, I_size, nSensors, nMotors, name))
 
         #  TODO: need to seriously check if mutations are occuring uniquely
         # probably misusing deepcopy here, figure this shit out
@@ -1416,6 +1570,10 @@ def evolve(settings, I_old, gen):
         # MUTATE SOMETIMES
         if np.random.random() < settings['mutationRateDup']:
             I_new[-1].mutate(settings)
+
+        # ADD NEW NEURON SOMETIMES
+        if np.random.random() < settings['addNeuronRate']:
+            I_new[-1].add_neuron(settings)
 
         # random mutations in duplication
 
